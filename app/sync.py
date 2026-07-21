@@ -36,7 +36,15 @@ class SyncManager:
         self.operation_error = error
 
     def _command(self, *arguments: str) -> list[str]:
-        return ["onedrive", "--confdir", str(self.config_dir), "--syncdir", str(self.data_dir), *arguments]
+        return [
+            "onedrive",
+            "--confdir",
+            str(self.config_dir),
+            "--syncdir",
+            str(self.data_dir),
+            "--force-http-11",
+            *arguments,
+        ]
 
     async def _consume_output(self, process: asyncio.subprocess.Process) -> None:
         assert process.stdout
