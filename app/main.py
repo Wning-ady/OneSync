@@ -68,12 +68,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/api/health")
     async def health() -> dict[str, object]:
+        graph_status = await graph.check_connection()
         return {
             "ok": True,
             "dataDirectoryAvailable": settings.data_dir.is_dir(),
             "graphClientConfigured": bool(settings.graph_client_id),
             "sync": sync.status(),
-            "graph": graph.auth_status(),
+            "graph": graph_status,
             "scopeConfigured": scope_is_configured(settings, selection),
         }
 
@@ -150,8 +151,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         return {"state": "queued", "operation": sync.status()["operation"]}
 
     @app.get("/api/graph/auth/status")
-    async def graph_status() -> dict[str, str]:
+    async def graph_status() -> dict[str, object]:
         return graph.auth_status()
+
+    @app.get("/api/graph/auth/check")
+    async def graph_check(force: bool = False) -> dict[str, object]:
+        return await graph.check_connection(force=force)
 
     @app.post("/api/graph/auth/device-code")
     async def graph_device_code() -> dict[str, object]:

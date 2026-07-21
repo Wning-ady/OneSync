@@ -34,6 +34,9 @@ class GraphClient:
         self.folder_cache: dict[str, str] = {}
         self.cursors: dict[str, str] = {}
         self.auth_error: str | None = None
+        self.last_verified_at: float | None = None
+        self.last_checked_at: float | None = None
+        self._check_lock = asyncio.Lock()
 
     @property
     def token_url(self) -> str:
@@ -43,99 +46,196 @@ class GraphClient:
     def device_code_url(self) -> str:
         return f"https://login.microsoftonline.com/{self.tenant}/oauth2/v2.0/devicecode"
 
-    def auth_status(self) -> dict[str, str]:
+    def _mark_error(self, message: str) -> None:
+        self.auth_error = message
+        self.last_verified_at = None
+
+    def auth_status(self) -> dict[str, object]:
         if not self.client_id:
-            return {"state": "not_configured"}
-        if self.pending and time.time() < self.pending.expires_at:
-            return {"state": "pending"}
-        if self.token_path.exists():
-            return {"state": "authorized"}
-        return {"state": "error" if self.auth_error else "unauthorized", "message": self.auth_error or ""}
+            return {"state": "not_configured", "message": "GRAPH_CLIENT_ID 尚未配置", "verified": False}
+        if self.pending:
+            if time.time() < self.pending.expires_at:
+                return {"state": "pending", "message": "请在 Microsoft 页面完成设备代码授权", "verified": False}
+            self.pending = None
+            self._mark_error("设备代码已过期，请重新发起授权。")
+        tokens = read_json(self.token_path, {})
+        if not isinstance(tokens, dict) or not tokens.get("access_token"):
+            message = self.auth_error or "尚未完成 Microsoft Graph 授权。"
+            return {"state": "error" if self.auth_error else "unauthorized", "message": message, "verified": False}
+        if self.auth_error:
+            return {"state": "error", "message": self.auth_error, "verified": False}
+        return {
+            "state": "authorized",
+            "message": "",
+            "verified": self.last_verified_at is not None,
+            "lastVerifiedAt": self.last_verified_at,
+        }
 
     async def begin_device_code(self) -> dict[str, object]:
         if not self.client_id:
             raise GraphError("GRAPH_CLIENT_ID has not been configured.")
-        async with httpx.AsyncClient(timeout=20) as client:
-            response = await client.post(self.device_code_url, data={"client_id": self.client_id, "scope": SCOPES})
+        try:
+            async with httpx.AsyncClient(timeout=20) as client:
+                response = await client.post(self.device_code_url, data={"client_id": self.client_id, "scope": SCOPES})
+        except httpx.HTTPError as error:
+            self._mark_error("无法连接 Microsoft 授权服务，请检查网络后重试。")
+            raise GraphError(self.auth_error) from error
         if response.is_error:
-            raise GraphError("Microsoft rejected the device-code request. Check the tenant and application registration.")
+            self._mark_error("Microsoft 拒绝了设备代码请求，请检查租户和应用注册。")
+            raise GraphError(self.auth_error)
         data = response.json()
         self.pending = PendingDeviceCode(data["device_code"], time.time() + int(data["expires_in"]), int(data.get("interval", 5)))
+        self.auth_error = None
+        self.last_verified_at = None
+        self.last_checked_at = None
         return {key: data[key] for key in ("user_code", "verification_uri", "verification_uri_complete", "expires_in", "interval", "message") if key in data}
 
     async def poll_device_code(self) -> dict[str, str]:
         pending = self.pending
         if not pending or time.time() >= pending.expires_at:
             self.pending = None
-            raise GraphError("No active device-code authorization. Start a new authorization request.")
-        async with httpx.AsyncClient(timeout=20) as client:
-            while time.time() < pending.expires_at:
-                response = await client.post(self.token_url, data={
-                    "client_id": self.client_id,
-                    "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
-                    "device_code": pending.device_code,
-                })
-                if response.is_success:
-                    tokens = response.json()
-                    tokens["obtained_at"] = time.time()
-                    write_json_private(self.token_path, tokens)
+            self._mark_error("设备代码已过期，请重新发起授权。")
+            raise GraphError(self.auth_error)
+        try:
+            async with httpx.AsyncClient(timeout=20) as client:
+                while time.time() < pending.expires_at:
+                    response = await client.post(self.token_url, data={
+                        "client_id": self.client_id,
+                        "grant_type": "urn:ietf:params:oauth:grant-type:device_code",
+                        "device_code": pending.device_code,
+                    })
+                    if response.is_success:
+                        tokens = response.json()
+                        tokens["obtained_at"] = time.time()
+                        write_json_private(self.token_path, tokens)
+                        self.pending = None
+                        self.auth_error = None
+                        self.last_verified_at = None
+                        self.last_checked_at = None
+                        return {"state": "authorized"}
+                    error = response.json().get("error", "authorization_pending")
+                    if error == "authorization_pending":
+                        await asyncio.sleep(pending.interval)
+                        continue
+                    if error == "slow_down":
+                        pending.interval += 5
+                        await asyncio.sleep(pending.interval)
+                        continue
                     self.pending = None
-                    self.auth_error = None
-                    return {"state": "authorized"}
-                error = response.json().get("error", "authorization_pending")
-                if error == "authorization_pending":
-                    await asyncio.sleep(pending.interval)
-                    continue
-                if error == "slow_down":
-                    pending.interval += 5
-                    await asyncio.sleep(pending.interval)
-                    continue
-                self.pending = None
-                self.auth_error = error
-                raise GraphError(f"Microsoft authorization failed: {error}.")
+                    message = {
+                        "authorization_declined": "Microsoft 拒绝了授权，请重新发起授权。",
+                        "expired_token": "设备代码已过期，请重新发起授权。",
+                        "invalid_grant": "授权无效，请确认使用了同一租户账号。",
+                    }.get(error, f"Microsoft 授权失败：{error}。")
+                    self._mark_error(message)
+                    raise GraphError(message)
+        except httpx.HTTPError as error:
+            self._mark_error("无法连接 Microsoft 授权服务，请检查网络后重试。")
+            raise GraphError(self.auth_error) from error
         self.pending = None
-        raise GraphError("The Microsoft device code expired.")
+        self._mark_error("设备代码已过期，请重新发起授权。")
+        raise GraphError(self.auth_error)
 
     async def _access_token(self, refresh: bool = False) -> str:
         tokens = read_json(self.token_path, {})
-        if not isinstance(tokens, dict) or "access_token" not in tokens:
-            raise GraphError("Authorize Microsoft Graph before browsing folders.")
-        expires_at = float(tokens.get("obtained_at", 0)) + int(tokens.get("expires_in", 0)) - 60
+        if not isinstance(tokens, dict) or not tokens.get("access_token"):
+            message = "请先完成 Microsoft Graph 授权，再浏览文件夹。"
+            self._mark_error(message)
+            raise GraphError(message)
+        try:
+            expires_at = float(tokens.get("obtained_at", 0)) + int(tokens.get("expires_in", 0)) - 60
+        except (TypeError, ValueError):
+            message = "Graph 授权文件无效，请重新连接 Graph。"
+            self._mark_error(message)
+            raise GraphError(message)
         if refresh or (expires_at and time.time() >= expires_at):
             refresh_token = tokens.get("refresh_token")
             if not refresh_token:
-                raise GraphError("Graph token expired. Reauthorize this manager.")
-            async with httpx.AsyncClient(timeout=20) as client:
-                response = await client.post(self.token_url, data={
-                    "client_id": self.client_id,
-                    "grant_type": "refresh_token",
-                    "refresh_token": refresh_token,
-                    "scope": SCOPES,
-                })
+                message = "Graph 授权已过期，请重新连接 Graph。"
+                self._mark_error(message)
+                raise GraphError(message)
+            try:
+                async with httpx.AsyncClient(timeout=20) as client:
+                    response = await client.post(self.token_url, data={
+                        "client_id": self.client_id,
+                        "grant_type": "refresh_token",
+                        "refresh_token": refresh_token,
+                        "scope": SCOPES,
+                    })
+            except httpx.HTTPError as error:
+                message = "无法连接 Microsoft 授权服务，请检查网络后重试。"
+                self._mark_error(message)
+                raise GraphError(message) from error
             if response.is_error:
-                raise GraphError("Graph token expired. Reauthorize this manager.")
+                message = "Graph 授权已过期，请重新连接 Graph。"
+                self._mark_error(message)
+                raise GraphError(message)
             updated = response.json()
             updated["refresh_token"] = updated.get("refresh_token", refresh_token)
             updated["obtained_at"] = time.time()
             write_json_private(self.token_path, updated)
             tokens = updated
+            self.auth_error = None
         return str(tokens["access_token"])
 
     async def _graph_get(self, url: str) -> dict[str, object]:
         parsed = urlparse(url)
         if parsed.netloc != "graph.microsoft.com":
             raise GraphError("Invalid pagination cursor.")
-        async with httpx.AsyncClient(timeout=30) as client:
-            response = await client.get(url, headers={"Authorization": f"Bearer {await self._access_token()}"})
-            if response.status_code == 401:
-                response = await client.get(url, headers={"Authorization": f"Bearer {await self._access_token(refresh=True)}"})
+        try:
+            async with httpx.AsyncClient(timeout=30) as client:
+                response = await client.get(url, headers={"Authorization": f"Bearer {await self._access_token()}"})
+                if response.status_code == 401:
+                    response = await client.get(url, headers={"Authorization": f"Bearer {await self._access_token(refresh=True)}"})
+        except httpx.HTTPError as error:
+            message = "无法连接 Microsoft Graph，请检查网络后重试。"
+            self._mark_error(message)
+            raise GraphError(message) from error
         if response.status_code == 401:
-            raise GraphError("Graph token expired. Reauthorize this manager.")
+            message = "Graph 授权已过期，请重新连接 Graph。"
+            self._mark_error(message)
+            raise GraphError(message)
         if response.status_code == 403:
-            raise GraphError("Graph permission was denied. Grant delegated permissions and admin consent.")
+            message = "Graph 权限被拒绝，请授予 Files.ReadWrite.All 管理员同意。"
+            self._mark_error(message)
+            raise GraphError(message)
         if response.is_error:
-            raise GraphError(f"Graph folder request failed ({response.status_code}).")
+            message = f"Graph 请求失败（HTTP {response.status_code}），请稍后重试。"
+            self._mark_error(message)
+            raise GraphError(message)
+        self.auth_error = None
+        self.last_verified_at = time.time()
+        self.last_checked_at = self.last_verified_at
         return response.json()
+
+    async def check_connection(self, force: bool = False) -> dict[str, object]:
+        """Verify a saved token at a bounded rate so health never lies about connectivity."""
+        status = self.auth_status()
+        if status["state"] not in {"authorized", "error"}:
+            return status
+        tokens = read_json(self.token_path, {})
+        if not isinstance(tokens, dict) or not tokens.get("access_token"):
+            return status
+        if not force and self.last_checked_at and time.time() - self.last_checked_at < 30:
+            return status
+        async with self._check_lock:
+            status = self.auth_status()
+            if status["state"] not in {"authorized", "error"}:
+                return status
+            tokens = read_json(self.token_path, {})
+            if not isinstance(tokens, dict) or not tokens.get("access_token"):
+                return status
+            self.last_checked_at = time.time()
+            try:
+                await asyncio.wait_for(
+                    self._graph_get("https://graph.microsoft.com/v1.0/me/drive?$select=id"),
+                    timeout=8,
+                )
+            except asyncio.TimeoutError:
+                self._mark_error("Microsoft Graph 响应超时，请检查网络后重试。")
+            except GraphError:
+                pass
+            return self.auth_status()
 
     async def folders(self, parent_id: str = "root", cursor: str | None = None) -> dict[str, object]:
         if cursor:

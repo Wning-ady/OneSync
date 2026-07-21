@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f5f7f8">
   <title>OneSync | Unraid OneDrive Sync</title>
   <style>
     :root {
@@ -12,23 +13,26 @@
       --text: #18202a; --muted: #65717e; --line: #d9dee5;
       --accent: #146c94; --accent-hover: #105978; --success: #207a4b;
       --warning: #9b5b08; --danger: #b42318; --log-bg: #151a21; --log-text: #d8e0ea;
-      --radius: 6px;
+      --radius: 7px; --shadow: 0 1px 2px rgba(24,32,42,.05);
     }
     * { box-sizing: border-box; letter-spacing: 0; }
-    body { margin: 0; color: var(--text); background: var(--page); font-size: 14px; }
+    html { scroll-behavior: smooth; }
+    body { margin: 0; color: var(--text); background: var(--page); font-size: 14px; -webkit-tap-highlight-color: rgba(20,108,148,.18); }
     button, input { font: inherit; }
-    button { min-height: 36px; padding: 7px 12px; color: var(--text); background: var(--surface); border: 1px solid #aeb7c2; border-radius: 5px; cursor: pointer; }
+    button { min-height: 36px; padding: 7px 12px; color: var(--text); background: var(--surface); border: 1px solid #aeb7c2; border-radius: 5px; cursor: pointer; touch-action: manipulation; transition: background-color .15s ease, border-color .15s ease, color .15s ease, opacity .15s ease; }
     button:hover:not(:disabled) { background: #eef3f6; border-color: #82909e; }
     button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid rgba(20,108,148,.25); outline-offset: 2px; }
     button:disabled { opacity: .5; cursor: not-allowed; }
     button.primary { color: #fff; background: var(--accent); border-color: var(--accent); }
     button.primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
     button.danger { color: var(--danger); border-color: #e1aaa5; }
-    .topbar { position: sticky; top: 0; z-index: 20; min-height: 58px; background: rgba(255,255,255,.97); border-bottom: 1px solid var(--line); }
+    .skip-link { position: fixed; z-index: 50; top: 8px; left: 8px; padding: 8px 12px; color: #fff; background: var(--accent); border-radius: 5px; transform: translateY(-140%); transition: transform .15s ease; }
+    .skip-link:focus-visible { transform: translateY(0); }
+    .topbar { position: sticky; top: 0; z-index: 20; min-height: 58px; background: rgba(255,255,255,.98); border-bottom: 1px solid var(--line); box-shadow: var(--shadow); }
     .topbar-inner { width: min(1280px, calc(100% - 40px)); min-height: 58px; margin: 0 auto; display: flex; align-items: center; gap: 18px; }
     .brand { display: flex; align-items: center; gap: 9px; margin-right: auto; white-space: nowrap; }
     .brand img { width: 30px; height: 30px; object-fit: cover; border-radius: 7px; }
-    .brand h1 { margin: 0; font-size: 20px; font-weight: 650; }
+    .brand h1 { margin: 0; font-size: 20px; font-weight: 650; text-wrap: balance; }
     .brand span { color: var(--muted); font-size: 12px; }
     .top-statuses { display: flex; align-items: center; gap: 14px; }
     .status-item { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; white-space: nowrap; }
@@ -40,7 +44,7 @@
     main { width: min(1280px, calc(100% - 40px)); margin: 20px auto 40px; }
     .workspace { display: grid; grid-template-columns: minmax(0, 7fr) minmax(330px, 5fr); align-items: start; gap: 16px; }
     .side { display: grid; gap: 16px; }
-    .panel { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+    .panel { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
     .panel-head { min-height: 54px; padding: 11px 14px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); }
     .panel-head h2 { margin: 0; font-size: 15px; font-weight: 650; }
     .panel-head .sub { color: var(--muted); font-size: 12px; }
@@ -78,10 +82,12 @@
     .phase-track span.done, .phase-track span.active { background: var(--accent); }
     .auth-row { display: flex; align-items: center; gap: 10px; }
     .auth-copy { min-width: 0; flex: 1; }
-    .auth-title { font-weight: 650; } .auth-detail { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
-    .device { display: none; margin-top: 12px; padding: 12px; background: #fff8e8; border: 1px solid #ecd59c; }
+    .auth-title { font-weight: 650; text-wrap: balance; } .auth-detail { color: var(--muted); font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+    .auth-title.error { color: var(--danger); } .auth-title.pending { color: var(--accent); } .auth-title.verified { color: var(--success); }
+    .device { display: none; margin-top: 12px; padding: 12px; background: #fff8e8; border: 1px solid #ecd59c; border-radius: 5px; }
     .device.show { display: block; }
-    .device-code { margin: 8px 0; font: 650 22px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 2px; }
+    .device-code { display: block; width: 100%; margin: 8px 0; padding: 8px 10px; color: var(--text); background: #fffdf7; border: 1px dashed #c79b42; border-radius: 4px; font: 650 22px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 2px; text-align: left; user-select: all; cursor: copy; }
+    .device-code:hover { background: #fff9eb; border-color: var(--warning); }
     .device-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .device a { display: inline-flex; align-items: center; min-height: 36px; padding: 7px 12px; color: #fff; background: var(--accent); border-radius: 5px; text-decoration: none; }
     .logs-panel { margin-top: 16px; }
@@ -90,6 +96,10 @@
     .log-output { height: 320px; margin: 0; padding: 13px 15px; overflow: auto; color: var(--log-text); background: var(--log-bg); border-radius: 0 0 5px 5px; font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; white-space: pre-wrap; }
     .spinner { display: inline-block; width: 13px; height: 13px; margin-right: 6px; vertical-align: -2px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
     @media (max-width: 959px) { .workspace { grid-template-columns: 1fr; } .folder-panel { min-height: 480px; } }
     @media (max-width: 640px) {
       .topbar-inner, main { width: min(calc(100% - 24px), 1280px); }
@@ -106,19 +116,20 @@
   </style>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
   <header class="topbar">
     <div class="topbar-inner">
-      <div class="brand"><img src="/static/onesync-logo.png" alt="OneSync"><h1>OneSync</h1><span>Unraid OneDrive Sync</span></div>
+      <div class="brand"><img src="/static/onesync-logo.png" width="30" height="30" alt="OneSync"><h1 translate="no">OneSync</h1><span>Unraid OneDrive Sync</span></div>
       <div class="top-statuses" role="status">
-        <span class="status-item"><i id="syncDot" class="dot"></i><span id="syncTop">读取中</span></span>
-        <span class="status-item"><i id="graphDot" class="dot"></i><span id="graphTop">Graph</span></span>
+        <span class="status-item"><i id="syncDot" class="dot" aria-hidden="true"></i><span id="syncTop">读取中…</span></span>
+        <span class="status-item"><i id="graphDot" class="dot" aria-hidden="true"></i><span id="graphTop">Graph</span></span>
       </div>
       <span id="refreshTime" class="refresh-time"></span>
     </div>
   </header>
-  <div id="globalAlert" class="global-alert" role="alert"></div>
+  <div id="globalAlert" class="global-alert" role="alert" aria-live="polite" aria-atomic="true"></div>
 
-  <main>
+  <main id="main-content" tabindex="-1">
     <div class="workspace">
       <section class="panel folder-panel" aria-labelledby="folderTitle">
         <div class="panel-head">
@@ -138,11 +149,11 @@
 
       <aside class="side">
         <section class="panel" aria-labelledby="engineTitle">
-          <div class="panel-head"><h2 id="engineTitle">同步引擎</h2><span id="engineBadge" class="sub">读取中</span></div>
+          <div class="panel-head"><h2 id="engineTitle">同步引擎</h2><span id="engineBadge" class="sub">读取中…</span></div>
           <div class="panel-body">
-            <div class="engine-state">
-              <div id="engineState" class="state-main">正在读取状态</div>
-              <span id="engineRunning" class="status-item"><i class="dot"></i></span>
+            <div class="engine-state" role="status" aria-live="polite">
+              <div id="engineState" class="state-main">正在读取状态…</div>
+              <span id="engineRunning" class="status-item"><i class="dot" aria-hidden="true"></i></span>
               <div id="engineDetail" class="state-detail"></div>
             </div>
             <div class="button-grid">
@@ -164,13 +175,13 @@
           <div class="panel-head"><h2 id="authTitle">Microsoft Graph</h2></div>
           <div class="panel-body">
             <div class="auth-row">
-              <i id="authDot" class="dot"></i>
+              <i id="authDot" class="dot" aria-hidden="true"></i>
               <div class="auth-copy"><div id="authState" class="auth-title">读取授权状态</div><div id="authDetail" class="auth-detail"></div></div>
               <button id="graphAuthButton" type="button">连接 Graph</button>
             </div>
             <div id="device" class="device">
-              <div>Microsoft 设备代码</div><div id="deviceCode" class="device-code"></div>
-              <div id="deviceMessage" class="auth-detail"></div>
+              <div>Microsoft 设备代码</div><button id="deviceCode" class="device-code" type="button" aria-label="复制 Microsoft 设备代码"></button>
+              <div id="deviceMessage" class="auth-detail" role="status" aria-live="polite"></div>
               <div class="device-actions"><button id="copyDeviceButton" type="button">复制代码</button><a id="deviceLink" href="#" target="_blank" rel="noopener">打开登录页</a></div>
             </div>
           </div>
@@ -192,7 +203,8 @@
     const state = {
       health: null, selectedIds: new Set(), selectedPaths: new Set(), savedPaths: new Set(),
       folderCache: new Map(), folderItems: new Map(), busy: new Set(), logsText: '',
-      pollTimer: null, graphPollActive: false, operationDismissed: null
+      pollTimer: null, graphCheckTimer: null, graphPollTimer: null, graphCheckInFlight: false, graphCheckAt: 0,
+      graphPollActive: false, graphPollInFlight: false, operationDismissed: null
     };
     const activePhases = new Set(['queued','dry_run','resync','restarting_monitor']);
     const modeLabels = {monitor:'持续同步中',once:'单次同步中',stopped:'已停止',reauth:'等待同步授权',resync_pending:'准备重同步',resync:'正在重同步'};
@@ -209,7 +221,8 @@
     function setButtonBusy(button, busy, label) {
       if (!button.dataset.label) button.dataset.label = button.textContent;
       button.disabled = busy;
-      button.innerHTML = busy ? `<span class="spinner"></span>${label || '处理中'}` : button.dataset.label;
+      button.setAttribute('aria-busy', String(busy));
+      button.innerHTML = busy ? `<span class="spinner" aria-hidden="true"></span>${label || '处理中…'}` : button.dataset.label;
     }
     async function withBusy(key, button, task) {
       if (state.busy.has(key)) return;
@@ -219,11 +232,13 @@
     }
     function statusDot(node, kind) { node.className = `dot ${kind || ''}`; }
     function updateHeader(health) {
-      const sync = health.sync, graph = health.graph.state;
+      const sync = health.sync, graph = health.graph || {};
       el.syncTop.textContent = modeLabels[sync.mode] || sync.mode;
       statusDot(el.syncDot, sync.running ? (sync.mode === 'monitor' ? 'ok' : 'busy') : (sync.mode === 'stopped' ? 'warn' : 'bad'));
-      el.graphTop.textContent = graph === 'authorized' ? 'Graph 已连接' : 'Graph 未连接';
-      statusDot(el.graphDot, graph === 'authorized' ? 'ok' : 'warn');
+      const graphConnected = graph.state === 'authorized' && graph.verified !== false;
+      const graphPending = graph.state === 'pending';
+      el.graphTop.textContent = graphConnected ? 'Graph 已连接' : graphPending ? 'Graph 授权中' : graph.state === 'error' ? 'Graph 连接异常' : graph.state === 'authorized' ? 'Graph 待验证' : 'Graph 待连接';
+      statusDot(el.graphDot, graphConnected ? 'ok' : graphPending ? 'busy' : graph.state === 'error' ? 'bad' : 'warn');
       el.refreshTime.textContent = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
     }
     function updateEngine(sync) {
@@ -248,11 +263,22 @@
       }
     }
     function updateAuth(graph) {
-      const authorized = graph.state === 'authorized';
-      el.authState.textContent = authorized ? 'Graph 已连接' : 'Graph 尚未连接';
-      el.authDetail.textContent = authorized ? '文件夹浏览权限可用' : '需要设备代码授权';
-      statusDot(el.authDot, authorized ? 'ok' : 'warn');
-      el.graphAuthButton.textContent = authorized ? '重新连接' : '连接 Graph';
+      graph = graph || {};
+      const stateName = graph?.state || 'error';
+      const verified = stateName === 'authorized' && graph.verified !== false;
+      const labels = {
+        authorized: [verified ? 'Graph 已连接' : 'Graph 授权已保存', verified ? '文件夹浏览权限可用' : '正在验证 Microsoft Graph 连接', 'verified'],
+        pending: ['正在等待授权', graph.message || '请在 Microsoft 页面完成设备代码授权', 'pending'],
+        unauthorized: ['尚未连接 Graph', graph.message || '点击“连接 Graph”开始设备代码授权', ''],
+        not_configured: ['未配置 Graph', graph.message || '请设置 GRAPH_CLIENT_ID 后重启容器', 'error'],
+        error: ['Graph 连接异常', graph.message || '请重新连接 Graph', 'error'],
+      };
+      const [title, detail, tone] = labels[stateName] || labels.error;
+      el.authState.textContent = title;
+      el.authState.className = `auth-title ${tone}`;
+      el.authDetail.textContent = detail;
+      statusDot(el.authDot, verified ? 'ok' : stateName === 'pending' ? 'busy' : stateName === 'error' || stateName === 'not_configured' ? 'bad' : 'warn');
+      el.graphAuthButton.textContent = stateName === 'authorized' ? '重新授权' : stateName === 'pending' ? '等待授权…' : '连接 Graph';
       el.graphAuthButton.dataset.label = el.graphAuthButton.textContent;
     }
     function updateControls() {
@@ -268,12 +294,32 @@
     async function refresh() {
       try {
         const [health, logData] = await Promise.all([api('/api/health'), api('/api/logs')]);
-        state.health = health; setGlobalError(); updateHeader(health); updateEngine(health.sync); updateAuth(health.graph); updateLogs(logData.lines || []); updateControls();
-      } catch (error) { setGlobalError(`无法连接管理服务：${error.message}`); statusDot(el.syncDot,'bad'); }
-      finally { scheduleRefresh(); }
+        state.health = health; if(health.graph?.verified) state.graphCheckAt=Date.now(); setGlobalError(); updateHeader(health); updateEngine(health.sync); updateAuth(health.graph); updateLogs(logData.lines || []); updateControls();
+      } catch (error) { setGlobalError(`无法连接管理服务：${error.message}`); statusDot(el.syncDot,'bad'); statusDot(el.graphDot,'bad'); el.graphTop.textContent='Graph 状态未知'; el.authState.textContent='管理服务不可达'; el.authState.className='auth-title error'; el.authDetail.textContent='请检查容器状态和端口 8098。'; }
+      finally { scheduleRefresh(); scheduleGraphCheck(); }
     }
     function scheduleRefresh() { clearTimeout(state.pollTimer); state.pollTimer = setTimeout(refresh, document.hidden ? 10000 : 2000); }
-    document.addEventListener('visibilitychange', () => { clearTimeout(state.pollTimer); scheduleRefresh(); });
+    function scheduleGraphCheck() {
+      clearTimeout(state.graphCheckTimer);
+      const delay = Math.max(5000, 30000 - (Date.now() - state.graphCheckAt));
+      state.graphCheckTimer = setTimeout(checkGraphConnection, delay);
+    }
+    async function checkGraphConnection(force = false) {
+      if (state.graphCheckInFlight || (!force && Date.now() - state.graphCheckAt < 30000)) { scheduleGraphCheck(); return; }
+      state.graphCheckInFlight = true;
+      try {
+        const graph = await api(`/api/graph/auth/check${force ? '?force=true' : ''}`);
+        state.graphCheckAt = Date.now();
+        if (state.health) { state.health.graph = graph; updateHeader(state.health); }
+        updateAuth(graph); updateControls();
+      } catch (error) {
+        setGlobalError(`Graph 连接检查失败：${error.message}`);
+      } finally {
+        state.graphCheckInFlight = false;
+        scheduleGraphCheck();
+      }
+    }
+    document.addEventListener('visibilitychange', () => { clearTimeout(state.pollTimer); clearTimeout(state.graphCheckTimer); scheduleRefresh(); scheduleGraphCheck(); });
     function updateLogs(lines) {
       const text = lines.join('\n'); if (text === state.logsText) return;
       const atBottom = el.logs.scrollTop + el.logs.clientHeight >= el.logs.scrollHeight - 16;
@@ -314,14 +360,19 @@
       state.selectedIds.add(parent);
     }
     async function loadRootFolders() {
-      await withBusy('folders', el.loadFoldersButton, async () => {
-        // Reload from the saved scope only. Keeping unsaved paths here made the
-        // visible checkbox state diverge from the folder IDs submitted on save.
-        state.folderItems.clear(); state.folderCache.clear(); state.selectedIds.clear(); state.selectedPaths = new Set(state.savedPaths);
-        await fetchAllFolders('root');
-        await Promise.all([...state.savedPaths].map(resolveSavedPath));
-        renderFolderLevel('root',el.folders); updateSelectionMeta();
-      });
+      try {
+        await withBusy('folders', el.loadFoldersButton, async () => {
+          // Reload from the saved scope only. Keeping unsaved paths here made the
+          // visible checkbox state diverge from the folder IDs submitted on save.
+          state.folderItems.clear(); state.folderCache.clear(); state.selectedIds.clear(); state.selectedPaths = new Set(state.savedPaths);
+          await fetchAllFolders('root');
+          await Promise.all([...state.savedPaths].map(resolveSavedPath));
+          renderFolderLevel('root',el.folders); updateSelectionMeta();
+        });
+      } catch(error) {
+        await checkGraphConnection(true);
+        throw error;
+      }
     }
     function renderFolderLevel(parentId, target) {
       target.replaceChildren(); const items = state.folderItems.get(parentId) || [];
@@ -329,7 +380,7 @@
       items.forEach(item => {
         const li=document.createElement('li'), row=document.createElement('div'), expand=document.createElement('button'), check=document.createElement('input'), label=document.createElement('label'), name=document.createElement('span'), path=document.createElement('span'), children=document.createElement('ul');
         const childId=`children-${item.id.replace(/[^a-zA-Z0-9_-]/g,'')}`; row.className='folder-row';
-        expand.className='expand'; expand.type='button'; expand.textContent='›'; expand.title='展开'; expand.setAttribute('aria-expanded','false'); expand.setAttribute('aria-controls',childId);
+        expand.className='expand'; expand.type='button'; expand.textContent='›'; expand.title=`展开 ${item.name}`; expand.setAttribute('aria-label',`展开 ${item.name}`); expand.setAttribute('aria-expanded','false'); expand.setAttribute('aria-controls',childId);
         check.className='folder-check'; check.type='checkbox'; check.id=`folder-${item.id.replace(/[^a-zA-Z0-9_-]/g,'')}`; check.checked=state.selectedIds.has(item.id);
         label.className='folder-label'; label.htmlFor=check.id; label.title=item.path; name.className='folder-name'; name.textContent=item.name; path.className='folder-path'; path.textContent=item.path; label.append(name,path);
         children.id=childId; children.hidden=true;
@@ -342,10 +393,10 @@
           updateSelectionMeta(); updateControls();
         });
         expand.addEventListener('click',async()=>{
-          if(!children.hidden){children.hidden=true;expand.textContent='›';expand.setAttribute('aria-expanded','false');return;}
-          expand.disabled=true; expand.innerHTML='<span class="spinner"></span>';
-          try{await fetchAllFolders(item.id);renderFolderLevel(item.id,children);children.hidden=false;expand.textContent='⌄';expand.setAttribute('aria-expanded','true');}
-          catch(error){setGlobalError(error.message);expand.textContent='›';} finally{expand.disabled=false;}
+          if(!children.hidden){children.hidden=true;expand.textContent='›';expand.title=`展开 ${item.name}`;expand.setAttribute('aria-label',`展开 ${item.name}`);expand.setAttribute('aria-expanded','false');return;}
+          expand.disabled=true; expand.innerHTML='<span class="spinner" aria-hidden="true"></span>';
+          try{await fetchAllFolders(item.id);renderFolderLevel(item.id,children);children.hidden=false;expand.textContent='⌄';expand.title=`收起 ${item.name}`;expand.setAttribute('aria-label',`收起 ${item.name}`);expand.setAttribute('aria-expanded','true');}
+          catch(error){setGlobalError(error.message);expand.textContent='›';expand.title=`展开 ${item.name}`;expand.setAttribute('aria-label',`展开 ${item.name}`);void checkGraphConnection(true);} finally{expand.disabled=false;}
         });
         row.append(expand,check,label); li.append(row,children); target.append(li);
       });
@@ -367,23 +418,54 @@
       await withBusy('graph-auth',el.graphAuthButton,async()=>{
         const data=await api('/api/graph/auth/device-code',{method:'POST'}), uri=new URL(data.verification_uri);
         if(uri.protocol!=='https:')throw new Error('Microsoft 返回了无效的授权地址。');
-        el.deviceCode.textContent=data.user_code;el.deviceMessage.textContent=data.message||'';el.deviceLink.href=uri.href;el.device.classList.add('show');state.graphPollActive=true;updateControls();pollGraph();
+        el.deviceCode.textContent=data.user_code;el.deviceMessage.textContent=data.message||'请打开登录页并输入上面的代码。';el.deviceLink.href=uri.href;el.device.classList.add('show');state.graphPollActive=true;state.graphPollInFlight=false;updateAuth({state:'pending',message:'请在 Microsoft 页面完成设备代码授权'});updateControls();void pollGraph();
       });
     }
     async function pollGraph() {
-      if(!state.graphPollActive)return;
-      try{await api('/api/graph/auth/poll',{method:'POST'});state.graphPollActive=false;el.device.classList.remove('show');await refreshNow();}
-      catch(error){if(/pending|authorization/i.test(error.message)){setTimeout(pollGraph,5000);}else{state.graphPollActive=false;setGlobalError(error.message);updateControls();}}
+      if(!state.graphPollActive || state.graphPollInFlight)return;
+      state.graphPollInFlight=true;
+      try {
+        await api('/api/graph/auth/poll',{method:'POST'});
+        state.graphPollActive=false; state.graphCheckAt=0; clearTimeout(state.graphPollTimer); state.graphPollTimer=null; el.device.classList.remove('show'); await refreshNow();
+      } catch(error) {
+        const message=error.message||'授权请求失败。';
+        const retryable=/authorization_pending|slow_down|failed to fetch|网络|超时/i.test(message);
+        if(retryable && state.graphPollActive){
+          el.deviceMessage.textContent='等待 Microsoft 确认授权…';
+          clearTimeout(state.graphPollTimer); state.graphPollTimer=setTimeout(()=>{state.graphPollTimer=null;state.graphPollInFlight=false;void pollGraph();},5000);
+        } else {
+          state.graphPollActive=false; clearTimeout(state.graphPollTimer); state.graphPollTimer=null; el.deviceMessage.textContent=message; setGlobalError(message); updateControls();
+        }
+      } finally { state.graphPollInFlight=false; }
     }
-    async function copyText(text, successLabel, button) { await navigator.clipboard.writeText(text); const original=button.textContent;button.textContent=successLabel;setTimeout(()=>button.textContent=original,1200); }
+    async function copyText(text, successLabel, button) {
+      const value=String(text||'').trim(); if(!value) throw new Error('没有可复制的内容。');
+      let copied=false;
+      if(window.isSecureContext && navigator.clipboard?.writeText){
+        try{await navigator.clipboard.writeText(value);copied=true;}catch{}
+      }
+      if(!copied){
+        const area=document.createElement('textarea'); area.value=value; area.setAttribute('readonly',''); area.setAttribute('aria-hidden','true');
+        area.style.position='fixed'; area.style.inset='-9999px auto auto -9999px'; area.style.opacity='0'; document.body.append(area); area.select(); area.setSelectionRange(0,value.length);
+        try{copied=typeof document.execCommand==='function' && document.execCommand('copy');}catch{copied=false;}finally{area.remove();}
+      }
+      if(!copied) throw new Error('浏览器禁止自动复制，请选中代码后按 Ctrl+C（Mac 按 ⌘+C）。');
+      const original=button.textContent;button.textContent=successLabel;button.setAttribute('aria-label',successLabel);setTimeout(()=>{button.textContent=original;button.removeAttribute('aria-label');},1200);
+    }
+    function reportCopyError(error) {
+      const message=error.message||'复制失败。';
+      if(el.device.classList.contains('show')) el.deviceMessage.textContent=message;
+      setGlobalError(message);
+    }
 
     document.querySelectorAll('.sync-command').forEach(button=>button.addEventListener('click',()=>syncAction(button.dataset.action,button).catch(()=>{})));
     el.resyncButton.addEventListener('click',()=>resync().catch(()=>{}));
     el.loadFoldersButton.addEventListener('click',()=>loadRootFolders().catch(()=>{}));
     el.saveSelectionButton.addEventListener('click',()=>saveSelection().catch(()=>{}));
     el.graphAuthButton.addEventListener('click',()=>startGraphAuth().catch(()=>{}));
-    el.copyDeviceButton.addEventListener('click',()=>copyText(el.deviceCode.textContent,'已复制',el.copyDeviceButton).catch(error=>setGlobalError(error.message)));
-    el.copyLogsButton.addEventListener('click',()=>copyText(state.logsText,'已复制',el.copyLogsButton).catch(error=>setGlobalError(error.message)));
+    el.copyDeviceButton.addEventListener('click',()=>copyText(el.deviceCode.textContent,'已复制',el.copyDeviceButton).catch(reportCopyError));
+    el.deviceCode.addEventListener('click',()=>copyText(el.deviceCode.textContent,'已复制',el.deviceCode).catch(reportCopyError));
+    el.copyLogsButton.addEventListener('click',()=>copyText(state.logsText,'已复制',el.copyLogsButton).catch(reportCopyError));
     el.clearLogsButton.addEventListener('click',()=>{el.logs.textContent='';el.logCount.textContent='0 行';});
     el.logs.addEventListener('scroll',()=>{if(el.logs.scrollTop+el.logs.clientHeight<el.logs.scrollHeight-24)el.followLogs.checked=false;});
 
