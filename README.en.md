@@ -13,6 +13,7 @@ OneSync runs the maintained [`abraunegg/onedrive`](https://github.com/abraunegg/
 - Selective sync from a browser folder tree.
 - Separate device-code authorization for OneDrive engine and Microsoft Graph.
 - Dry-run before confirmed resync after scope changes.
+- Graph status verification: the UI periodically checks Microsoft Graph and distinguishes pending, unverified, and disconnected states instead of trusting an old token file.
 - No forced overwrite or `--cleanup-local-files`.
 - One-time sync by default. Continuous monitoring stays off.
 
@@ -50,6 +51,8 @@ Create a single-tenant public client. Enable public client flows. Add redirect U
 2. Click **Connect Graph** and complete the second device-code authorization.
 3. Load folders, select scope, save, then run **Controlled resync**.
 4. Resync performs dry-run first and remains stopped on completion. Click **Sync once** for later changes.
+
+If the LAN page cannot use the Clipboard API, click the device code itself to select it and press `Ctrl+C` (or `⌘+C` on macOS).
 
 ## Storage and safety
 

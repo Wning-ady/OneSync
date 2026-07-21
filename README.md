@@ -24,6 +24,7 @@ OneSync 使用维护活跃的 [`abraunegg/onedrive`](https://github.com/abrauneg
 | 目录树选择 | 只同步勾选的 OneDrive 文件夹，范围清晰可控。 |
 | 双设备代码授权 | OneDrive 同步引擎与 Microsoft Graph 分别授权，令牌隔离保存。 |
 | 受控重同步 | 修改同步范围前先执行 dry-run，确认后才进行 resync；空范围直接拒绝。 |
+| Graph 状态校验 | 定期验证 Microsoft Graph，分别显示授权中、待验证与连接异常。 |
 | 安全默认值 | 不使用强制覆盖或 `--cleanup-local-files`，冲突由官方客户端保留副本。 |
 | 单次同步 | 默认不运行持续监控，避免 Unraid 长期扫描；需要时手动同步一次。 |
 
@@ -90,6 +91,8 @@ services:
 | 现象 | 处理 |
 | --- | --- |
 | Graph 设备代码被拒绝 | 核对单租户设置、`GRAPH_CLIENT_ID`、`GRAPH_TENANT_ID` 和管理员同意的委托权限。 |
+| Graph 显示连接异常 | 点击“重新授权”完成设备代码流程；若只是网络中断，等待连接检查在网络恢复后自动重试。 |
+| 设备代码无法复制 | 局域网 HTTP 受浏览器限制时，点击代码本身选中后按 `Ctrl+C`（Mac 按 `⌘+C`）。 |
 | 管理页无法连接 | 检查容器状态、端口 `8098`、Unraid 防火墙和反向代理。 |
 | 同步范围不正确 | 停止同步，确认页面范围与 `/onedrive/conf/sync_list` 一致，再执行受控重同步。 |
 | 网络中断 | “同步一次”会报告错误并保持停止；网络恢复后再次运行。 |
