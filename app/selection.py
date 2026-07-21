@@ -32,7 +32,12 @@ class SelectionStore:
     def load(self) -> list[str]:
         if self.selected is None:
             try:
-                self.selected = normalize_paths([line.strip() for line in self.path.read_text(encoding="utf-8").splitlines() if line.strip()])
+                raw = [line.strip() for line in self.path.read_text(encoding="utf-8").splitlines() if line.strip()]
+                paths = [line[1:-1] if line.startswith("/") and line.endswith("/") else line for line in raw]
+                self.selected = normalize_paths(paths)
+                rooted = [f"/{path}/" for path in self.selected]
+                if raw != rooted:
+                    write_lines_atomic(self.path, rooted)
             except FileNotFoundError:
                 self.selected = []
         return self.selected
@@ -41,7 +46,7 @@ class SelectionStore:
         normal = normalize_paths(paths)
         if not normal:
             raise ValueError("Choose at least one folder; an empty sync scope is not allowed.")
-        write_lines_atomic(self.path, normal)
+        write_lines_atomic(self.path, [f"/{path}/" for path in normal])
         self.selected = normal
         self.revision += 1
         return normal

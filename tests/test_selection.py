@@ -10,7 +10,7 @@ from app.settings import Settings
 def test_normalizes_descendants_and_writes_private_file(tmp_path: Path) -> None:
     store = SelectionStore(tmp_path / "sync_list")
     assert store.save(["Documents/Projects", "Documents", "Photos"]) == ["Documents", "Photos"]
-    assert (tmp_path / "sync_list").read_text() == "Documents\nPhotos\n"
+    assert (tmp_path / "sync_list").read_text() == "/Documents/\n/Photos/\n"
     assert (tmp_path / "sync_list").stat().st_mode & 0o777 == 0o600
 
 
@@ -23,6 +23,16 @@ def test_rejects_unsafe_paths(path: str) -> None:
 def test_empty_selection_is_rejected(tmp_path: Path) -> None:
     with pytest.raises(ValueError):
         SelectionStore(tmp_path / "sync_list").save([])
+
+
+def test_migrates_legacy_rules_to_root_scoped_directories(tmp_path: Path) -> None:
+    sync_list = tmp_path / "sync_list"
+    sync_list.write_text("Documents\nbackup/Projects\n")
+
+    store = SelectionStore(sync_list)
+
+    assert store.load() == ["Documents", "backup/Projects"]
+    assert sync_list.read_text() == "/Documents/\n/backup/Projects/\n"
 
 
 def test_client_config_removes_unsupported_legacy_scope_option(tmp_path: Path) -> None:
