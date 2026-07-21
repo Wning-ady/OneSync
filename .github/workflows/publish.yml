@@ -26,7 +26,6 @@ jobs:
           tags: ghcr.io/${{ github.repository_owner }}/onesync:latest
 
   publish-dockerhub:
-    if: ${{ secrets.DOCKERHUB_USERNAME != '' && secrets.DOCKERHUB_TOKEN != '' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
