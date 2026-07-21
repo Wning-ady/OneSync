@@ -1,5 +1,7 @@
 FROM driveone/onedrive:edge
 
+ARG APP_VERSION=dev
+
 USER root
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 python3-pip gosu \
@@ -14,6 +16,7 @@ COPY docker/entrypoint.sh /usr/local/bin/onesync
 RUN chmod 0755 /usr/local/bin/onesync
 
 ENV APP_CONFIG_DIR=/onedrive/conf \
+    ONESYNC_VERSION=${APP_VERSION} \
     ONEDRIVE_DATA_DIR=/onedrive/data \
     GRAPH_TENANT_ID=5dldn8.onmicrosoft.com \
     TZ=Asia/Shanghai \
