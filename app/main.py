@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -71,6 +72,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         graph_status = await graph.check_connection()
         return {
             "ok": True,
+            "version": os.environ.get("ONESYNC_VERSION", "dev"),
             "dataDirectoryAvailable": settings.data_dir.is_dir(),
             "graphClientConfigured": bool(settings.graph_client_id),
             "sync": sync.status(),
