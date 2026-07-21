@@ -59,6 +59,13 @@ def test_auth_status_validates_token_shape(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_poll_is_idempotent_after_another_request_authorized(tmp_path) -> None:
+    client = GraphClient("client", "tenant", tmp_path / "token.json")
+    client.token_path.write_text(json.dumps({"access_token": "secret"}))
+    assert await client.poll_device_code() == {"state": "authorized"}
+
+
+@pytest.mark.asyncio
 async def test_graph_error_marks_connection_unavailable(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
     client = GraphClient("client", "tenant", tmp_path / "token.json")
     client.token_path.write_text(json.dumps({"access_token": "secret"}))
