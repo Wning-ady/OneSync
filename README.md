@@ -98,7 +98,7 @@ services:
 ## 镜像与发布
 
 - Docker Hub：[`waning/onesync`](https://hub.docker.com/r/waning/onesync)
-- GitHub Container Registry：`ghcr.io/Wning-ady/onesync:latest`
+- GitHub Container Registry：`ghcr.io/wning-ady/onesync:latest`
 - GitHub 仓库：[Wning-ady/OneSync](https://github.com/Wning-ady/OneSync)
 
 直接拉取 Docker Hub 镜像：
