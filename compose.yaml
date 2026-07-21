@@ -1,7 +1,6 @@
 services:
   onesync:
-    image: onesync:local
-    build: .
+    image: docker.io/waning/onesync:latest
     container_name: onesync
     environment:
       PUID: "99"
