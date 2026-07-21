@@ -1,0 +1,393 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OneSync | Unraid OneDrive Sync</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, "Segoe UI", "PingFang SC", system-ui, sans-serif;
+      --page: #f5f7f8; --surface: #ffffff; --surface-soft: #f8fafb;
+      --text: #18202a; --muted: #65717e; --line: #d9dee5;
+      --accent: #146c94; --accent-hover: #105978; --success: #207a4b;
+      --warning: #9b5b08; --danger: #b42318; --log-bg: #151a21; --log-text: #d8e0ea;
+      --radius: 6px;
+    }
+    * { box-sizing: border-box; letter-spacing: 0; }
+    body { margin: 0; color: var(--text); background: var(--page); font-size: 14px; }
+    button, input { font: inherit; }
+    button { min-height: 36px; padding: 7px 12px; color: var(--text); background: var(--surface); border: 1px solid #aeb7c2; border-radius: 5px; cursor: pointer; }
+    button:hover:not(:disabled) { background: #eef3f6; border-color: #82909e; }
+    button:focus-visible, input:focus-visible, a:focus-visible { outline: 3px solid rgba(20,108,148,.25); outline-offset: 2px; }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    button.primary { color: #fff; background: var(--accent); border-color: var(--accent); }
+    button.primary:hover:not(:disabled) { background: var(--accent-hover); border-color: var(--accent-hover); }
+    button.danger { color: var(--danger); border-color: #e1aaa5; }
+    .topbar { position: sticky; top: 0; z-index: 20; min-height: 58px; background: rgba(255,255,255,.97); border-bottom: 1px solid var(--line); }
+    .topbar-inner { width: min(1280px, calc(100% - 40px)); min-height: 58px; margin: 0 auto; display: flex; align-items: center; gap: 18px; }
+    .brand { display: flex; align-items: center; gap: 9px; margin-right: auto; white-space: nowrap; }
+    .brand img { width: 30px; height: 30px; object-fit: cover; border-radius: 7px; }
+    .brand h1 { margin: 0; font-size: 20px; font-weight: 650; }
+    .brand span { color: var(--muted); font-size: 12px; }
+    .top-statuses { display: flex; align-items: center; gap: 14px; }
+    .status-item { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+    .dot { width: 8px; height: 8px; border-radius: 50%; background: #8a96a3; }
+    .dot.ok { background: var(--success); } .dot.busy { background: var(--accent); } .dot.warn { background: var(--warning); } .dot.bad { background: var(--danger); }
+    .refresh-time { min-width: 54px; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; text-align: right; }
+    .global-alert { display: none; padding: 10px 20px; color: #7a251d; background: #fce8e6; border-bottom: 1px solid #efc0bc; }
+    .global-alert.show { display: block; }
+    main { width: min(1280px, calc(100% - 40px)); margin: 20px auto 40px; }
+    .workspace { display: grid; grid-template-columns: minmax(0, 7fr) minmax(330px, 5fr); align-items: start; gap: 16px; }
+    .side { display: grid; gap: 16px; }
+    .panel { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
+    .panel-head { min-height: 54px; padding: 11px 14px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); }
+    .panel-head h2 { margin: 0; font-size: 15px; font-weight: 650; }
+    .panel-head .sub { color: var(--muted); font-size: 12px; }
+    .panel-head .actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+    .panel-body { padding: 14px; }
+    .folder-panel { min-height: 520px; }
+    .folder-toolbar { min-height: 45px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; background: var(--surface-soft); border-bottom: 1px solid var(--line); }
+    .selection-meta { color: var(--muted); margin-right: auto; }
+    .dirty { color: var(--warning); font-weight: 600; }
+    .folder-tree { height: 410px; margin: 0; padding: 5px 0; overflow: auto; list-style: none; }
+    .folder-tree ul { margin: 0; padding: 0 0 0 20px; list-style: none; }
+    .folder-row { min-height: 40px; display: grid; grid-template-columns: 30px 24px minmax(0,1fr); align-items: center; padding: 3px 12px 3px 6px; border-bottom: 1px solid #eef1f4; }
+    .folder-row:hover { background: #f5f8fa; }
+    .expand { width: 28px; min-height: 28px; padding: 0; border-color: transparent; background: transparent; font-size: 17px; line-height: 1; }
+    .folder-check { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
+    .folder-label { min-width: 0; cursor: pointer; }
+    .folder-name { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 550; }
+    .folder-path { display: block; overflow: hidden; color: var(--muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+    .empty-state { padding: 70px 20px; color: var(--muted); text-align: center; }
+    .folder-footer { min-height: 58px; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); }
+    .inline-note { color: var(--muted); font-size: 12px; }
+    .engine-state { display: grid; grid-template-columns: 1fr auto; gap: 6px 16px; padding-bottom: 14px; border-bottom: 1px solid var(--line); }
+    .state-main { font-size: 18px; font-weight: 650; }
+    .state-detail { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
+    .button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .button-grid button { width: 100%; }
+    .operation { display: none; margin-top: 14px; padding: 11px 12px; background: #edf6fa; border-left: 3px solid var(--accent); }
+    .operation.show { display: block; }
+    .operation.success { color: #155c38; background: #edf7f1; border-color: var(--success); }
+    .operation.error { color: #84251d; background: #fcecea; border-color: var(--danger); }
+    .operation-title { font-weight: 650; }
+    .operation-detail { margin-top: 4px; font-size: 12px; overflow-wrap: anywhere; }
+    .phase-track { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; margin-top: 10px; }
+    .phase-track span { height: 3px; background: #cdd7dd; }
+    .phase-track span.done, .phase-track span.active { background: var(--accent); }
+    .auth-row { display: flex; align-items: center; gap: 10px; }
+    .auth-copy { min-width: 0; flex: 1; }
+    .auth-title { font-weight: 650; } .auth-detail { color: var(--muted); font-size: 12px; overflow-wrap: anywhere; }
+    .device { display: none; margin-top: 12px; padding: 12px; background: #fff8e8; border: 1px solid #ecd59c; }
+    .device.show { display: block; }
+    .device-code { margin: 8px 0; font: 650 22px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 2px; }
+    .device-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .device a { display: inline-flex; align-items: center; min-height: 36px; padding: 7px 12px; color: #fff; background: var(--accent); border-radius: 5px; text-decoration: none; }
+    .logs-panel { margin-top: 16px; }
+    .log-tools { display: flex; align-items: center; gap: 10px; margin-left: auto; }
+    .toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
+    .log-output { height: 320px; margin: 0; padding: 13px 15px; overflow: auto; color: var(--log-text); background: var(--log-bg); border-radius: 0 0 5px 5px; font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .spinner { display: inline-block; width: 13px; height: 13px; margin-right: 6px; vertical-align: -2px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (max-width: 959px) { .workspace { grid-template-columns: 1fr; } .folder-panel { min-height: 480px; } }
+    @media (max-width: 640px) {
+      .topbar-inner, main { width: min(calc(100% - 24px), 1280px); }
+      .topbar-inner { min-height: 64px; flex-wrap: wrap; gap: 6px 12px; padding: 8px 0; }
+      .brand { width: 100%; } .brand span, .refresh-time { display: none; }
+      .top-statuses { gap: 10px; } main { margin-top: 12px; }
+      .panel-head { align-items: flex-start; flex-wrap: wrap; } .panel-head .actions { width: 100%; margin-left: 0; }
+      button { min-height: 44px; } .folder-tree { height: 360px; }
+      .folder-footer { position: sticky; bottom: 0; background: var(--surface); }
+      .folder-footer button { width: 100%; } .folder-footer .inline-note { display: none; }
+      .button-grid { grid-template-columns: 1fr 1fr; } .log-output { height: 240px; }
+      .log-tools button { min-height: 34px; padding: 5px 8px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand"><img src="/static/onesync-logo.png" alt="OneSync"><h1>OneSync</h1><span>Unraid OneDrive Sync</span></div>
+      <div class="top-statuses" role="status">
+        <span class="status-item"><i id="syncDot" class="dot"></i><span id="syncTop">读取中</span></span>
+        <span class="status-item"><i id="graphDot" class="dot"></i><span id="graphTop">Graph</span></span>
+      </div>
+      <span id="refreshTime" class="refresh-time"></span>
+    </div>
+  </header>
+  <div id="globalAlert" class="global-alert" role="alert"></div>
+
+  <main>
+    <div class="workspace">
+      <section class="panel folder-panel" aria-labelledby="folderTitle">
+        <div class="panel-head">
+          <div><h2 id="folderTitle">同步范围</h2><span class="sub">OneDrive 云端文件夹</span></div>
+          <div class="actions"><button id="loadFoldersButton" type="button">刷新目录</button></div>
+        </div>
+        <div class="folder-toolbar">
+          <span id="selectionCount" class="selection-meta">已选 0 个</span>
+          <span id="selectionDirty" class="dirty"></span>
+        </div>
+        <ul id="folders" class="folder-tree" aria-label="OneDrive 文件夹树"><li class="empty-state">点击“刷新目录”加载云端文件夹</li></ul>
+        <div class="folder-footer">
+          <span id="selectionNote" class="inline-note">保存范围后需要执行一次受控重同步</span>
+          <button id="saveSelectionButton" class="primary" type="button" disabled>保存同步范围</button>
+        </div>
+      </section>
+
+      <aside class="side">
+        <section class="panel" aria-labelledby="engineTitle">
+          <div class="panel-head"><h2 id="engineTitle">同步引擎</h2><span id="engineBadge" class="sub">读取中</span></div>
+          <div class="panel-body">
+            <div class="engine-state">
+              <div id="engineState" class="state-main">正在读取状态</div>
+              <span id="engineRunning" class="status-item"><i class="dot"></i></span>
+              <div id="engineDetail" class="state-detail"></div>
+            </div>
+            <div class="button-grid">
+              <button class="primary sync-command" data-action="start" type="button">持续同步</button>
+              <button class="sync-command" data-action="once" type="button">同步一次</button>
+              <button class="sync-command danger" data-action="stop" type="button">停止</button>
+              <button class="sync-command" data-action="reauth" type="button">同步授权</button>
+            </div>
+            <button id="resyncButton" type="button" style="width:100%;margin-top:8px">受控重同步</button>
+            <div id="operation" class="operation" role="status" aria-live="polite">
+              <div id="operationTitle" class="operation-title"></div>
+              <div id="operationDetail" class="operation-detail"></div>
+              <div id="phaseTrack" class="phase-track"><span></span><span></span><span></span><span></span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-labelledby="authTitle">
+          <div class="panel-head"><h2 id="authTitle">Microsoft Graph</h2></div>
+          <div class="panel-body">
+            <div class="auth-row">
+              <i id="authDot" class="dot"></i>
+              <div class="auth-copy"><div id="authState" class="auth-title">读取授权状态</div><div id="authDetail" class="auth-detail"></div></div>
+              <button id="graphAuthButton" type="button">连接 Graph</button>
+            </div>
+            <div id="device" class="device">
+              <div>Microsoft 设备代码</div><div id="deviceCode" class="device-code"></div>
+              <div id="deviceMessage" class="auth-detail"></div>
+              <div class="device-actions"><button id="copyDeviceButton" type="button">复制代码</button><a id="deviceLink" href="#" target="_blank" rel="noopener">打开登录页</a></div>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </div>
+
+    <section class="panel logs-panel" aria-labelledby="logsTitle">
+      <div class="panel-head">
+        <h2 id="logsTitle">同步日志</h2><span id="logCount" class="sub">0 行</span>
+        <div class="log-tools"><label class="toggle"><input id="followLogs" type="checkbox" checked> 跟随最新</label><button id="copyLogsButton" type="button">复制</button><button id="clearLogsButton" type="button">清空显示</button></div>
+      </div>
+      <pre id="logs" class="log-output" aria-label="OneDrive 同步日志"></pre>
+    </section>
+  </main>
+
+  <script>
+    const el = Object.fromEntries([...document.querySelectorAll('[id]')].map(node => [node.id, node]));
+    const state = {
+      health: null, selectedIds: new Set(), selectedPaths: new Set(), savedPaths: new Set(),
+      folderCache: new Map(), folderItems: new Map(), busy: new Set(), logsText: '',
+      pollTimer: null, graphPollActive: false, operationDismissed: null
+    };
+    const activePhases = new Set(['queued','dry_run','resync','restarting_monitor']);
+    const modeLabels = {monitor:'持续同步中',once:'单次同步中',stopped:'已停止',reauth:'等待同步授权',resync_pending:'准备重同步',resync:'正在重同步'};
+    const phaseLabels = {queued:'任务已排队',dry_run:'安全检查中',resync:'正在重同步',restarting_monitor:'正在恢复持续同步',succeeded:'重同步已完成',failed:'重同步失败',cancelled:'重同步已取消'};
+
+    async function api(url, options = {}) {
+      const response = await fetch(url, options);
+      let data;
+      try { data = await response.json(); } catch { throw new Error(`服务返回了无效响应 (${response.status})`); }
+      if (!response.ok) throw new Error(data.detail || `请求失败 (${response.status})`);
+      return data;
+    }
+    function setGlobalError(message = '') { el.globalAlert.textContent = message; el.globalAlert.classList.toggle('show', Boolean(message)); }
+    function setButtonBusy(button, busy, label) {
+      if (!button.dataset.label) button.dataset.label = button.textContent;
+      button.disabled = busy;
+      button.innerHTML = busy ? `<span class="spinner"></span>${label || '处理中'}` : button.dataset.label;
+    }
+    async function withBusy(key, button, task) {
+      if (state.busy.has(key)) return;
+      state.busy.add(key); setButtonBusy(button, true);
+      try { setGlobalError(); return await task(); } catch (error) { setGlobalError(error.message); throw error; }
+      finally { state.busy.delete(key); setButtonBusy(button, false); updateControls(); }
+    }
+    function statusDot(node, kind) { node.className = `dot ${kind || ''}`; }
+    function updateHeader(health) {
+      const sync = health.sync, graph = health.graph.state;
+      el.syncTop.textContent = modeLabels[sync.mode] || sync.mode;
+      statusDot(el.syncDot, sync.running ? (sync.mode === 'monitor' ? 'ok' : 'busy') : (sync.mode === 'stopped' ? 'warn' : 'bad'));
+      el.graphTop.textContent = graph === 'authorized' ? 'Graph 已连接' : 'Graph 未连接';
+      statusDot(el.graphDot, graph === 'authorized' ? 'ok' : 'warn');
+      el.refreshTime.textContent = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    }
+    function updateEngine(sync) {
+      el.engineState.textContent = modeLabels[sync.mode] || sync.mode;
+      el.engineBadge.textContent = sync.running ? '运行中' : '未运行';
+      el.engineDetail.textContent = sync.running ? '本地改动与 OneDrive 云端保持同步' : '同步进程当前未运行';
+      const dot = el.engineRunning.querySelector('.dot'); statusDot(dot, sync.running ? (sync.mode === 'monitor' ? 'ok' : 'busy') : 'warn');
+      updateOperation(sync.operation || {});
+    }
+    function updateOperation(op) {
+      if (!op.phase || op.phase === 'idle') { el.operation.className = 'operation'; return; }
+      const key = `${op.phase}:${op.finishedAt || op.startedAt || ''}`;
+      if (state.operationDismissed === key) { el.operation.className = 'operation'; return; }
+      el.operation.className = `operation show ${op.phase === 'failed' ? 'error' : op.phase === 'succeeded' ? 'success' : ''}`;
+      el.operationTitle.textContent = phaseLabels[op.phase] || op.phase;
+      el.operationDetail.textContent = op.error || op.message || '';
+      const order = ['queued','dry_run','resync','restarting_monitor']; const current = order.indexOf(op.phase);
+      [...el.phaseTrack.children].forEach((bar,index) => bar.className = index < current ? 'done' : index === current ? 'active' : '');
+      if (op.phase === 'succeeded' && op.finishedAt && !el.operation.dataset.timerKey?.includes(key)) {
+        el.operation.dataset.timerKey = key;
+        setTimeout(() => { state.operationDismissed = key; el.operation.className = 'operation'; }, 8000);
+      }
+    }
+    function updateAuth(graph) {
+      const authorized = graph.state === 'authorized';
+      el.authState.textContent = authorized ? 'Graph 已连接' : 'Graph 尚未连接';
+      el.authDetail.textContent = authorized ? '文件夹浏览权限可用' : '需要设备代码授权';
+      statusDot(el.authDot, authorized ? 'ok' : 'warn');
+      el.graphAuthButton.textContent = authorized ? '重新连接' : '连接 Graph';
+      el.graphAuthButton.dataset.label = el.graphAuthButton.textContent;
+    }
+    function updateControls() {
+      const op = state.health?.sync?.operation || {}, locked = activePhases.has(op.phase);
+      document.querySelectorAll('.sync-command').forEach(button => {
+        const action = button.dataset.action;
+        button.disabled = state.busy.size > 0 || (locked && action !== 'stop');
+      });
+      el.resyncButton.disabled = state.busy.size > 0 || locked || state.savedPaths.size === 0;
+      el.saveSelectionButton.disabled = state.busy.size > 0 || locked || !selectionChanged() || state.selectedIds.size === 0;
+      el.graphAuthButton.disabled = state.busy.has('graph-auth') || state.graphPollActive;
+    }
+    async function refresh() {
+      try {
+        const [health, logData] = await Promise.all([api('/api/health'), api('/api/logs')]);
+        state.health = health; setGlobalError(); updateHeader(health); updateEngine(health.sync); updateAuth(health.graph); updateLogs(logData.lines || []); updateControls();
+      } catch (error) { setGlobalError(`无法连接管理服务：${error.message}`); statusDot(el.syncDot,'bad'); }
+      finally { scheduleRefresh(); }
+    }
+    function scheduleRefresh() { clearTimeout(state.pollTimer); state.pollTimer = setTimeout(refresh, document.hidden ? 10000 : 2000); }
+    document.addEventListener('visibilitychange', () => { clearTimeout(state.pollTimer); scheduleRefresh(); });
+    function updateLogs(lines) {
+      const text = lines.join('\n'); if (text === state.logsText) return;
+      const atBottom = el.logs.scrollTop + el.logs.clientHeight >= el.logs.scrollHeight - 16;
+      state.logsText = text; el.logs.textContent = text; el.logCount.textContent = `${lines.length} 行`;
+      if (el.followLogs.checked && atBottom) el.logs.scrollTop = el.logs.scrollHeight;
+    }
+    async function syncAction(action, button) {
+      await withBusy(`sync-${action}`, button, async () => { await api(`/api/sync/${action}`,{method:'POST'}); await refreshNow(); });
+    }
+    async function refreshNow() { clearTimeout(state.pollTimer); await refresh(); }
+    async function resync() {
+      if (!confirm('将先执行安全 dry-run，检查通过后再重同步当前选择。继续吗？')) return;
+      await withBusy('resync', el.resyncButton, async () => {
+        await api('/api/sync/resync',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({confirm:true})});
+        await refreshNow();
+      });
+    }
+    async function loadSavedSelection() {
+      const data = await api('/api/selection');
+      state.savedPaths = new Set(data.folders || []); state.selectedPaths = new Set(state.savedPaths); updateSelectionMeta();
+    }
+    async function fetchAllFolders(parentId) {
+      if (state.folderItems.has(parentId)) return state.folderItems.get(parentId);
+      const items = []; let cursor = null;
+      do {
+        const query = new URLSearchParams({parent_id:parentId}); if (cursor) query.set('cursor',cursor);
+        const page = await api(`/api/folders?${query}`); items.push(...(page.items || [])); cursor = page.nextCursor || null;
+      } while (cursor);
+      state.folderItems.set(parentId,items); items.forEach(item => state.folderCache.set(item.id,item)); return items;
+    }
+    async function resolveSavedPath(path) {
+      let parent = 'root', current = '';
+      for (const segment of path.split('/')) {
+        current = current ? `${current}/${segment}` : segment;
+        const items = await fetchAllFolders(parent), match = items.find(item => item.path === current || item.name === segment);
+        if (!match) return; parent = match.id;
+      }
+      state.selectedIds.add(parent);
+    }
+    async function loadRootFolders() {
+      await withBusy('folders', el.loadFoldersButton, async () => {
+        // Reload from the saved scope only. Keeping unsaved paths here made the
+        // visible checkbox state diverge from the folder IDs submitted on save.
+        state.folderItems.clear(); state.folderCache.clear(); state.selectedIds.clear(); state.selectedPaths = new Set(state.savedPaths);
+        await fetchAllFolders('root');
+        await Promise.all([...state.savedPaths].map(resolveSavedPath));
+        renderFolderLevel('root',el.folders); updateSelectionMeta();
+      });
+    }
+    function renderFolderLevel(parentId, target) {
+      target.replaceChildren(); const items = state.folderItems.get(parentId) || [];
+      if (!items.length) { const empty=document.createElement('li'); empty.className='empty-state'; empty.textContent='此目录没有子文件夹'; target.append(empty); return; }
+      items.forEach(item => {
+        const li=document.createElement('li'), row=document.createElement('div'), expand=document.createElement('button'), check=document.createElement('input'), label=document.createElement('label'), name=document.createElement('span'), path=document.createElement('span'), children=document.createElement('ul');
+        const childId=`children-${item.id.replace(/[^a-zA-Z0-9_-]/g,'')}`; row.className='folder-row';
+        expand.className='expand'; expand.type='button'; expand.textContent='›'; expand.title='展开'; expand.setAttribute('aria-expanded','false'); expand.setAttribute('aria-controls',childId);
+        check.className='folder-check'; check.type='checkbox'; check.id=`folder-${item.id.replace(/[^a-zA-Z0-9_-]/g,'')}`; check.checked=state.selectedIds.has(item.id);
+        label.className='folder-label'; label.htmlFor=check.id; label.title=item.path; name.className='folder-name'; name.textContent=item.name; path.className='folder-path'; path.textContent=item.path; label.append(name,path);
+        children.id=childId; children.hidden=true;
+        check.addEventListener('change',()=>{
+          if(check.checked){state.selectedIds.add(item.id);state.selectedPaths.add(item.path);}
+          else {
+            for (const [id, cached] of state.folderCache) if(cached.path===item.path || cached.path.startsWith(`${item.path}/`)) state.selectedIds.delete(id);
+            for (const path of [...state.selectedPaths]) if(path===item.path || path.startsWith(`${item.path}/`)) state.selectedPaths.delete(path);
+          }
+          updateSelectionMeta(); updateControls();
+        });
+        expand.addEventListener('click',async()=>{
+          if(!children.hidden){children.hidden=true;expand.textContent='›';expand.setAttribute('aria-expanded','false');return;}
+          expand.disabled=true; expand.innerHTML='<span class="spinner"></span>';
+          try{await fetchAllFolders(item.id);renderFolderLevel(item.id,children);children.hidden=false;expand.textContent='⌄';expand.setAttribute('aria-expanded','true');}
+          catch(error){setGlobalError(error.message);expand.textContent='›';} finally{expand.disabled=false;}
+        });
+        row.append(expand,check,label); li.append(row,children); target.append(li);
+      });
+    }
+    function selectionChanged() { return [...state.selectedPaths].sort().join('\n') !== [...state.savedPaths].sort().join('\n'); }
+    function updateSelectionMeta() { el.selectionCount.textContent=`已选 ${state.selectedPaths.size} 个`; el.selectionDirty.textContent=selectionChanged()?'有未保存更改':''; }
+    async function saveSelection() {
+      if (!state.selectedIds.size) { setGlobalError('至少选择一个文件夹。'); return; }
+      await withBusy('selection',el.saveSelectionButton,async()=>{
+        const ids=[...state.selectedIds], preview=await api('/api/selection/preview',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({folder_ids:ids})});
+        const next=new Set(preview.folders), current=new Set(preview.current), added=[...next].filter(x=>!current.has(x)), removed=[...current].filter(x=>!next.has(x));
+        const details=[added.length?`新增：\n${added.join('\n')}`:'',removed.length?`移除：\n${removed.join('\n')}`:''].filter(Boolean).join('\n\n');
+        if(!confirm(`确认保存以下同步范围变更？\n\n${details || '同步范围未变化'}\n\n移除目录将在受控重同步前再次进行 dry-run。`))return;
+        const result=await api('/api/selection/apply',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({folder_ids:ids,confirm:true})});
+        state.savedPaths=new Set(result.folders);state.selectedPaths=new Set(result.folders);updateSelectionMeta();el.selectionNote.textContent='同步范围已保存，请执行受控重同步';updateControls();
+      });
+    }
+    async function startGraphAuth() {
+      await withBusy('graph-auth',el.graphAuthButton,async()=>{
+        const data=await api('/api/graph/auth/device-code',{method:'POST'}), uri=new URL(data.verification_uri);
+        if(uri.protocol!=='https:')throw new Error('Microsoft 返回了无效的授权地址。');
+        el.deviceCode.textContent=data.user_code;el.deviceMessage.textContent=data.message||'';el.deviceLink.href=uri.href;el.device.classList.add('show');state.graphPollActive=true;updateControls();pollGraph();
+      });
+    }
+    async function pollGraph() {
+      if(!state.graphPollActive)return;
+      try{await api('/api/graph/auth/poll',{method:'POST'});state.graphPollActive=false;el.device.classList.remove('show');await refreshNow();}
+      catch(error){if(/pending|authorization/i.test(error.message)){setTimeout(pollGraph,5000);}else{state.graphPollActive=false;setGlobalError(error.message);updateControls();}}
+    }
+    async function copyText(text, successLabel, button) { await navigator.clipboard.writeText(text); const original=button.textContent;button.textContent=successLabel;setTimeout(()=>button.textContent=original,1200); }
+
+    document.querySelectorAll('.sync-command').forEach(button=>button.addEventListener('click',()=>syncAction(button.dataset.action,button).catch(()=>{})));
+    el.resyncButton.addEventListener('click',()=>resync().catch(()=>{}));
+    el.loadFoldersButton.addEventListener('click',()=>loadRootFolders().catch(()=>{}));
+    el.saveSelectionButton.addEventListener('click',()=>saveSelection().catch(()=>{}));
+    el.graphAuthButton.addEventListener('click',()=>startGraphAuth().catch(()=>{}));
+    el.copyDeviceButton.addEventListener('click',()=>copyText(el.deviceCode.textContent,'已复制',el.copyDeviceButton).catch(error=>setGlobalError(error.message)));
+    el.copyLogsButton.addEventListener('click',()=>copyText(state.logsText,'已复制',el.copyLogsButton).catch(error=>setGlobalError(error.message)));
+    el.clearLogsButton.addEventListener('click',()=>{el.logs.textContent='';el.logCount.textContent='0 行';});
+    el.logs.addEventListener('scroll',()=>{if(el.logs.scrollTop+el.logs.clientHeight<el.logs.scrollHeight-24)el.followLogs.checked=false;});
+
+    (async()=>{try{await loadSavedSelection();}catch(error){setGlobalError(error.message);}finally{updateControls();refresh();}})();
+  </script>
+</body>
+</html>

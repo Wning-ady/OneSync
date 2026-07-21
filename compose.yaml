@@ -1,0 +1,17 @@
+services:
+  onesync:
+    image: onesync:local
+    build: .
+    container_name: onesync
+    environment:
+      PUID: "99"
+      PGID: "100"
+      TZ: Asia/Shanghai
+      GRAPH_CLIENT_ID: replace-with-your-entra-client-id
+      GRAPH_TENANT_ID: 5dldn8.onmicrosoft.com
+    ports:
+      - "8098:8098"
+    volumes:
+      - /mnt/user/appdata/onesync:/onedrive/conf
+      - /mnt/user/onedrive:/onedrive/data
+    restart: unless-stopped
