@@ -13,7 +13,7 @@
       --text: #18202a; --muted: #65717e; --line: #d9dee5;
       --accent: #146c94; --accent-hover: #105978; --success: #207a4b;
       --warning: #9b5b08; --danger: #b42318; --log-bg: #151a21; --log-text: #d8e0ea;
-      --radius: 7px; --shadow: 0 1px 2px rgba(24,32,42,.05);
+      --radius: 8px; --shadow: 0 2px 8px rgba(24,32,42,.06);
     }
     * { box-sizing: border-box; letter-spacing: 0; }
     html { scroll-behavior: smooth; }
@@ -28,14 +28,15 @@
     button.danger { color: var(--danger); border-color: #e1aaa5; }
     .skip-link { position: fixed; z-index: 50; top: 8px; left: 8px; padding: 8px 12px; color: #fff; background: var(--accent); border-radius: 5px; transform: translateY(-140%); transition: transform .15s ease; }
     .skip-link:focus-visible { transform: translateY(0); }
-    .topbar { position: sticky; top: 0; z-index: 20; min-height: 58px; background: rgba(255,255,255,.98); border-bottom: 1px solid var(--line); box-shadow: var(--shadow); }
-    .topbar-inner { width: min(1280px, calc(100% - 40px)); min-height: 58px; margin: 0 auto; display: flex; align-items: center; gap: 18px; }
+    .topbar { position: sticky; top: 0; z-index: 20; min-height: 62px; background: rgba(255,255,255,.98); border-bottom: 1px solid var(--line); box-shadow: 0 3px 14px rgba(24,32,42,.08); }
+    .topbar-inner { width: min(1280px, calc(100% - 40px)); min-height: 62px; margin: 0 auto; display: flex; align-items: center; gap: 18px; }
     .brand { display: flex; align-items: center; gap: 9px; margin-right: auto; white-space: nowrap; }
     .brand img { width: 30px; height: 30px; object-fit: cover; border-radius: 7px; }
-    .brand h1 { margin: 0; font-size: 20px; font-weight: 650; text-wrap: balance; }
+    .brand h1 { margin: 0; font-size: 21px; font-weight: 700; text-wrap: balance; }
     .brand span { color: var(--muted); font-size: 12px; }
     .top-statuses { display: flex; align-items: center; gap: 14px; }
     .status-item { display: inline-flex; align-items: center; gap: 7px; color: var(--muted); font-size: 13px; white-space: nowrap; }
+    .top-statuses .status-item { padding: 6px 9px; background: var(--surface-soft); border: 1px solid #e7ebef; border-radius: 999px; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #8a96a3; }
     .dot.ok { background: var(--success); } .dot.busy { background: var(--accent); } .dot.warn { background: var(--warning); } .dot.bad { background: var(--danger); }
     .refresh-time { min-width: 54px; color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; text-align: right; }
@@ -44,20 +45,20 @@
     main { width: min(1280px, calc(100% - 40px)); margin: 20px auto 40px; }
     .workspace { display: grid; grid-template-columns: minmax(0, 7fr) minmax(330px, 5fr); align-items: start; gap: 16px; }
     .side { display: grid; gap: 16px; }
-    .panel { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
-    .panel-head { min-height: 54px; padding: 11px 14px; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid var(--line); }
-    .panel-head h2 { margin: 0; font-size: 15px; font-weight: 650; }
+    .panel { min-width: 0; background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+    .panel-head { min-height: 58px; padding: 12px 16px; display: flex; align-items: center; gap: 12px; background: #fcfdfe; border-bottom: 1px solid var(--line); }
+    .panel-head h2 { margin: 0; font-size: 15px; font-weight: 700; text-wrap: balance; }
     .panel-head .sub { color: var(--muted); font-size: 12px; }
     .panel-head .actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
-    .panel-body { padding: 14px; }
+    .panel-body { padding: 16px; }
     .folder-panel { min-height: 520px; }
-    .folder-toolbar { min-height: 45px; padding: 8px 12px; display: flex; align-items: center; gap: 10px; background: var(--surface-soft); border-bottom: 1px solid var(--line); }
-    .selection-meta { color: var(--muted); margin-right: auto; }
+    .folder-toolbar { min-height: 48px; padding: 8px 14px; display: flex; align-items: center; gap: 10px; background: var(--surface-soft); border-bottom: 1px solid var(--line); }
+    .selection-meta { color: var(--muted); margin-right: auto; font-variant-numeric: tabular-nums; }
     .dirty { color: var(--warning); font-weight: 600; }
-    .folder-tree { height: 410px; margin: 0; padding: 5px 0; overflow: auto; list-style: none; }
+    .folder-tree { height: 410px; margin: 0; padding: 5px 0 18px; overflow: auto; list-style: none; scrollbar-color: #b9c4cd transparent; }
     .folder-tree ul { margin: 0; padding: 0 0 0 20px; list-style: none; }
     .folder-row { min-height: 40px; display: grid; grid-template-columns: 30px 24px minmax(0,1fr); align-items: center; padding: 3px 12px 3px 6px; border-bottom: 1px solid #eef1f4; }
-    .folder-row:hover { background: #f5f8fa; }
+    .folder-row:hover { background: #f1f7fa; }
     .expand { width: 28px; min-height: 28px; padding: 0; border-color: transparent; background: transparent; font-size: 17px; line-height: 1; }
     .folder-check { width: 16px; height: 16px; margin: 0; accent-color: var(--accent); }
     .folder-label { min-width: 0; cursor: pointer; }
@@ -71,6 +72,7 @@
     .state-detail { grid-column: 1 / -1; color: var(--muted); font-size: 12px; }
     .button-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
     .button-grid button { width: 100%; }
+    .full-width { width: 100%; margin-top: 10px; }
     .operation { display: none; margin-top: 14px; padding: 11px 12px; background: #edf6fa; border-left: 3px solid var(--accent); }
     .operation.show { display: block; }
     .operation.success { color: #155c38; background: #edf7f1; border-color: var(--success); }
@@ -86,14 +88,14 @@
     .auth-title.error { color: var(--danger); } .auth-title.pending { color: var(--accent); } .auth-title.verified { color: var(--success); }
     .device { display: none; margin-top: 12px; padding: 12px; background: #fff8e8; border: 1px solid #ecd59c; border-radius: 5px; }
     .device.show { display: block; }
-    .device-code { display: block; width: 100%; margin: 8px 0; padding: 8px 10px; color: var(--text); background: #fffdf7; border: 1px dashed #c79b42; border-radius: 4px; font: 650 22px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 2px; text-align: left; user-select: all; cursor: copy; }
+    .device-code { display: block; width: 100%; margin: 8px 0; padding: 9px 10px; color: var(--text); background: #fffdf7; border: 1px dashed #c79b42; border-radius: 4px; font: 650 22px ui-monospace, SFMono-Regular, Consolas, monospace; letter-spacing: 0; text-align: left; user-select: all; cursor: copy; }
     .device-code:hover { background: #fff9eb; border-color: var(--warning); }
     .device-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .device a { display: inline-flex; align-items: center; min-height: 36px; padding: 7px 12px; color: #fff; background: var(--accent); border-radius: 5px; text-decoration: none; }
     .logs-panel { margin-top: 16px; }
     .log-tools { display: flex; align-items: center; gap: 10px; margin-left: auto; }
     .toggle { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); font-size: 12px; }
-    .log-output { height: 320px; margin: 0; padding: 13px 15px; overflow: auto; color: var(--log-text); background: var(--log-bg); border-radius: 0 0 5px 5px; font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; white-space: pre-wrap; }
+    .log-output { height: 320px; margin: 0; padding: 13px 15px; overflow: auto; color: var(--log-text); background: var(--log-bg); border-radius: 0 0 5px 5px; font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; overflow-wrap: anywhere; white-space: pre-wrap; scrollbar-color: #566575 var(--log-bg); }
     .spinner { display: inline-block; width: 13px; height: 13px; margin-right: 6px; vertical-align: -2px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
     @media (prefers-reduced-motion: reduce) {
@@ -108,7 +110,7 @@
       .top-statuses { gap: 10px; } main { margin-top: 12px; }
       .panel-head { align-items: flex-start; flex-wrap: wrap; } .panel-head .actions { width: 100%; margin-left: 0; }
       button { min-height: 44px; } .folder-tree { height: 360px; }
-      .folder-footer { position: sticky; bottom: 0; background: var(--surface); }
+      .folder-footer { background: var(--surface); }
       .folder-footer button { width: 100%; } .folder-footer .inline-note { display: none; }
       .button-grid { grid-template-columns: 1fr 1fr; } .log-output { height: 240px; }
       .log-tools button { min-height: 34px; padding: 5px 8px; }
@@ -120,9 +122,9 @@
   <header class="topbar">
     <div class="topbar-inner">
       <div class="brand"><img src="/static/onesync-logo.png" width="30" height="30" alt="OneSync"><h1 translate="no">OneSync</h1><span>Unraid OneDrive Sync</span></div>
-      <div class="top-statuses" role="status">
-        <span class="status-item"><i id="syncDot" class="dot" aria-hidden="true"></i><span id="syncTop">读取中…</span></span>
-        <span class="status-item"><i id="graphDot" class="dot" aria-hidden="true"></i><span id="graphTop">Graph</span></span>
+      <div class="top-statuses">
+        <span class="status-item" role="status" aria-live="polite"><i id="syncDot" class="dot" aria-hidden="true"></i><span id="syncTop">读取中…</span></span>
+        <span class="status-item" role="status" aria-live="polite"><i id="graphDot" class="dot" aria-hidden="true"></i><span id="graphTop">Graph</span></span>
       </div>
       <span id="refreshTime" class="refresh-time"></span>
     </div>
@@ -153,7 +155,7 @@
           <div class="panel-body">
             <div class="engine-state" role="status" aria-live="polite">
               <div id="engineState" class="state-main">正在读取状态…</div>
-              <span id="engineRunning" class="status-item"><i class="dot" aria-hidden="true"></i></span>
+              <span id="engineRunning" class="status-item" aria-label="同步引擎状态"><i class="dot" aria-hidden="true"></i><span class="engine-running-label">未运行</span></span>
               <div id="engineDetail" class="state-detail"></div>
             </div>
             <div class="button-grid">
@@ -162,7 +164,7 @@
               <button class="sync-command danger" data-action="stop" type="button">停止</button>
               <button class="sync-command" data-action="reauth" type="button">同步授权</button>
             </div>
-            <button id="resyncButton" type="button" style="width:100%;margin-top:8px">受控重同步</button>
+            <button id="resyncButton" class="full-width" type="button">受控重同步</button>
             <div id="operation" class="operation" role="status" aria-live="polite">
               <div id="operationTitle" class="operation-title"></div>
               <div id="operationDetail" class="operation-detail"></div>
@@ -194,7 +196,7 @@
         <h2 id="logsTitle">同步日志</h2><span id="logCount" class="sub">0 行</span>
         <div class="log-tools"><label class="toggle"><input id="followLogs" type="checkbox" checked> 跟随最新</label><button id="copyLogsButton" type="button">复制</button><button id="clearLogsButton" type="button">清空显示</button></div>
       </div>
-      <pre id="logs" class="log-output" aria-label="OneDrive 同步日志"></pre>
+      <pre id="logs" class="log-output" tabindex="0" aria-label="OneDrive 同步日志"></pre>
     </section>
   </main>
 
@@ -246,6 +248,7 @@
       el.engineBadge.textContent = sync.running ? '运行中' : '未运行';
       el.engineDetail.textContent = sync.running ? '本地改动与 OneDrive 云端保持同步' : '同步进程当前未运行';
       const dot = el.engineRunning.querySelector('.dot'); statusDot(dot, sync.running ? (sync.mode === 'monitor' ? 'ok' : 'busy') : 'warn');
+      el.engineRunning.querySelector('.engine-running-label').textContent = sync.running ? '运行中' : '未运行';
       updateOperation(sync.operation || {});
     }
     function updateOperation(op) {
