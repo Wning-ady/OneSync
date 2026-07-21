@@ -60,7 +60,7 @@ Create a single-tenant public client. Enable public client flows. Add redirect U
 
 ## Images
 
-- `ghcr.io/Wning-ady/onesync:latest`
+- `ghcr.io/wning-ady/onesync:latest`
 - `docker.io/<DOCKERHUB_USERNAME>/onesync:latest`
 
 GitHub Actions publishes GHCR on `main` or `v*`. Docker Hub publishing needs `DOCKERHUB_USERNAME` and `DOCKERHUB_TOKEN` repository secrets.

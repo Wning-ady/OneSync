@@ -86,7 +86,7 @@ services:
 
 ## 镜像与发布
 
-- GitHub Container Registry：`ghcr.io/Wning-ady/onesync:latest`
+- GitHub Container Registry：`ghcr.io/wning-ady/onesync:latest`
 - Docker Hub：`docker.io/<DOCKERHUB_USERNAME>/onesync:latest`
 
 推送 `main` 或 `v*` 标签会触发 GitHub Actions。Docker Hub 发布需要仓库 Actions secrets：
