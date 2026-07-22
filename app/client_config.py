@@ -24,7 +24,7 @@ def ensure_client_config(settings: Settings) -> None:
     # an earlier manager build; leaving it makes every client command fail validation.
     pattern = r"(?m)^\s*sync_list\s*=.*(?:\n|$)"
     content = re.sub(pattern, "", content)
-    for option in ('force_http_11 = "true"', 'ip_protocol_version = "1"'):
+    for option in ('force_http_11 = "true"', 'ip_protocol_version = "1"', 'display_transfer_metrics = "true"'):
         key = option.split(" =", 1)[0]
         if not re.search(rf"(?m)^\s*{re.escape(key)}\s*=", content):
             if content and not content.endswith("\n"):
