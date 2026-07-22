@@ -105,7 +105,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/")
     async def index() -> FileResponse:
-        return FileResponse(Path(__file__).parent / "static" / "index.html")
+        return FileResponse(
+            Path(__file__).parent / "static" / "index.html",
+            headers={"Cache-Control": "no-store, max-age=0"},
+        )
 
     @app.get("/api/health")
     async def health() -> dict[str, object]:
@@ -271,6 +274,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/api/graph/auth/status")
     async def graph_status() -> dict[str, object]:
+        return graph.auth_status()
+
+    @app.get("/api/graph/status")
+    async def graph_status_compat() -> dict[str, object]:
+        """Compatibility endpoint for pages cached before the Graph API rename."""
         return graph.auth_status()
 
     @app.get("/api/graph/auth/check")
