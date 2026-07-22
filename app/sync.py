@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
+import re
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -23,6 +25,56 @@ class SyncManager:
     operation_error: str | None = None
     operation_started_at: str | None = None
     operation_finished_at: str | None = None
+    events: deque[dict[str, object]] = field(default_factory=lambda: deque(maxlen=500))
+    completed_downloads: int = 0
+    completed_uploads: int = 0
+    active_download: str | None = None
+    active_upload: str | None = None
+    _last_failed_path: str | None = None
+
+    def _event_path(self) -> Path:
+        return self.config_dir / "change-events.jsonl"
+
+    def _record(self, direction: str, action: str, path: str = "", status: str = "completed", detail: str = "") -> None:
+        event = {"time": datetime.now(timezone.utc).isoformat(), "direction": direction, "action": action, "path": path, "status": status, "detail": detail, "mode": self.mode}
+        self.events.append(event)
+        self.config_dir.mkdir(parents=True, exist_ok=True)
+        with self._event_path().open("a", encoding="utf-8") as file:
+            file.write(json.dumps(event, ensure_ascii=False) + "\n")
+
+    def _append_log(self, line: str) -> None:
+        self.logs.append(line)
+        download = re.search(r"^Downloading file: (.+?) \.\.\. (done|failed!)$", line)
+        upload = re.search(r"^Uploading (?:new |modified )?file: (.+?) \.\.\. (done|failed!)$", line)
+        progress = re.search(r"^Downloading: (.+?) \.\.\. (\d+)%", line)
+        if progress:
+            self.active_download = progress.group(1)
+        if download:
+            path, outcome = download.groups()
+            self.active_download = None
+            if outcome == "done":
+                self.completed_downloads += 1
+                self._record("cloud_to_local", "download", path)
+            else:
+                self._last_failed_path = path
+                self._record("cloud_to_local", "download", path, "failed", "下载失败，正在确认原因")
+        elif upload:
+            path, outcome = upload.groups()
+            self.active_upload = None
+            if outcome == "done":
+                self.completed_uploads += 1
+                self._record("local_to_cloud", "upload", path)
+            else:
+                self._record("local_to_cloud", "upload", path, "failed", "上传失败")
+        elif line.startswith("Deleting remote file:"):
+            self._record("local_to_cloud", "delete", line.split(":", 1)[1].strip())
+        elif line.startswith("Deleting local file:"):
+            self._record("cloud_to_local", "delete", line.split(":", 1)[1].strip())
+        elif "Conflict" in line:
+            self._record("conflict", "conflict", status="warning", detail=line)
+        elif "status code 404" in line and self._last_failed_path:
+            self._record("cloud_to_local", "remote_missing", self._last_failed_path, "warning", "云端对象已删除或移动；未自动删除本地文件")
+            self._last_failed_path = None
 
     def _set_operation(self, phase: str, message: str, error: str | None = None) -> None:
         now = datetime.now(timezone.utc).isoformat()
@@ -49,9 +101,11 @@ class SyncManager:
     async def _consume_output(self, process: asyncio.subprocess.Process) -> None:
         assert process.stdout
         async for line in process.stdout:
-            self.logs.append(line.decode(errors="replace").rstrip())
+            self._append_log(line.decode(errors="replace").rstrip())
         result = await process.wait()
-        self.logs.append(f"OneDrive process exited with code {result}.")
+        self._append_log(f"OneDrive process exited with code {result}.")
+        if result:
+            self._record("system", "engine_exit", status="failed", detail=f"OneDrive exited with code {result}")
         if self.process is process:
             self.process = None
             self.mode = "stopped"
@@ -59,7 +113,7 @@ class SyncManager:
     async def _wait_with_logs(self, process: asyncio.subprocess.Process) -> int:
         assert process.stdout
         async for line in process.stdout:
-            self.logs.append(line.decode(errors="replace").rstrip())
+            self._append_log(line.decode(errors="replace").rstrip())
         return await process.wait()
 
     async def start(self, mode: str = "monitor") -> None:
@@ -203,4 +257,5 @@ class SyncManager:
                 "startedAt": self.operation_started_at,
                 "finishedAt": self.operation_finished_at,
             },
+            "progress": {"downloadsCompleted": self.completed_downloads, "uploadsCompleted": self.completed_uploads, "activeDownload": self.active_download, "activeUpload": self.active_upload, "totalKnown": False},
         }

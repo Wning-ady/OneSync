@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -12,6 +13,7 @@ from pydantic import BaseModel, Field
 
 from .client_config import ensure_client_config, scope_is_configured
 from .graph import GraphClient, GraphError
+from .notifications import NotificationError, NotificationManager
 from .selection import SelectionStore
 from .settings import Settings
 from .storage import read_json, write_json_private
@@ -30,11 +32,18 @@ class ConfirmRequest(BaseModel):
     confirm: bool
 
 
+class NotificationRequest(BaseModel):
+    enabled: bool = False
+    webhook_url: str = ""
+    events: dict[str, bool] = Field(default_factory=dict)
+
+
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.from_environment()
     sync = SyncManager(settings.config_dir, settings.data_dir)
     graph = GraphClient(settings.graph_client_id, settings.graph_tenant_id, settings.config_dir / "graph-tokens.json")
     selection = SelectionStore(settings.config_dir / "sync_list")
+    notifications = NotificationManager(settings.config_dir / "notifications.json")
 
     @asynccontextmanager
     async def lifespan(_: FastAPI):
@@ -45,7 +54,32 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         runtime_state = read_json(settings.config_dir / "manager-state.json", {})
         if isinstance(runtime_state, dict) and runtime_state.get("monitor_enabled"):
             await sync.start("monitor")
+        last_event = 0
+        graph_was_connected = False
+        async def notification_watch() -> None:
+            nonlocal last_event, graph_was_connected
+            while True:
+                await asyncio.sleep(15)
+                config = notifications.public()
+                if not config["enabled"]:
+                    continue
+                events = list(sync.events)
+                for event in events[last_event:]:
+                    if event.get("status") in {"failed", "warning"}:
+                        await notifications.send("sync_error", "warning" if event.get("status") == "warning" else "error", str(event.get("detail") or event.get("action")), {"path": event.get("path", ""), "action": event.get("action", "")})
+                last_event = len(events)
+                status = await graph.check_connection(force=True)
+                connected = bool(status.get("verified"))
+                if graph_was_connected and not connected:
+                    await notifications.send("graph_disconnected", "error", str(status.get("message") or "Microsoft Graph 已断开。"))
+                graph_was_connected = connected
+        watcher = asyncio.create_task(notification_watch())
         yield
+        watcher.cancel()
+        try:
+            await watcher
+        except asyncio.CancelledError:
+            pass
         await sync.shutdown()
 
     app = FastAPI(title="OneSync", lifespan=lifespan)
@@ -70,6 +104,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/health")
     async def health() -> dict[str, object]:
         graph_status = await graph.check_connection()
+        account = await graph.profile() if graph_status.get("verified") else {}
         return {
             "ok": True,
             "version": os.environ.get("ONESYNC_VERSION", "dev"),
@@ -77,12 +112,44 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             "graphClientConfigured": bool(settings.graph_client_id),
             "sync": sync.status(),
             "graph": graph_status,
+            "account": account,
             "scopeConfigured": scope_is_configured(settings, selection),
         }
 
     @app.get("/api/logs")
     async def logs() -> dict[str, list[str]]:
         return {"lines": list(sync.logs)}
+
+    @app.get("/api/changes")
+    async def changes(limit: int = 100) -> dict[str, object]:
+        limit = max(1, min(limit, 500))
+        events = list(sync.events)
+        path = settings.config_dir / "change-events.jsonl"
+        if not events and path.exists():
+            try:
+                events = [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()[-limit:]]
+            except (OSError, ValueError):
+                events = []
+        return {"events": list(reversed(events[-limit:]))}
+
+    @app.get("/api/notifications")
+    async def notification_settings() -> dict[str, object]:
+        return notifications.public()
+
+    @app.put("/api/notifications")
+    async def save_notification_settings(request: NotificationRequest) -> dict[str, object]:
+        try:
+            return notifications.save(request.enabled, request.webhook_url, request.events)
+        except NotificationError as error:
+            raise bad_request(error)
+
+    @app.post("/api/notifications/test")
+    async def test_notifications() -> dict[str, str]:
+        try:
+            await notifications.send_test()
+        except NotificationError as error:
+            raise bad_request(error)
+        return {"status": "sent"}
 
     @app.get("/api/selection")
     async def get_selection() -> dict[str, object]:

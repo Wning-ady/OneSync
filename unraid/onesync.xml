@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<Container version="2">
+  <Name>OneSync</Name>
+  <Repository>waning/onesync:latest</Repository>
+  <Registry>https://hub.docker.com/r/waning/onesync</Registry>
+  <Network>bridge</Network>
+  <WebUI>http://[IP]:[PORT:8098]/</WebUI>
+  <Icon>https://raw.githubusercontent.com/Wning-ady/OneSync/main/docs/assets/onesync-logo.png</Icon>
+  <Config Name="管理端口" Target="8098" Default="8098" Mode="tcp" Description="OneSync 管理页面端口" Type="Port" Display="always" Required="true" Mask="false">8098</Config>
+  <Config Name="配置目录" Target="/onedrive/conf" Default="/mnt/user/appdata/onesync" Mode="rw" Description="保存授权、范围、通知和变更记录" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/onesync</Config>
+  <Config Name="同步目录" Target="/onedrive/data" Default="/mnt/user/onedrive" Mode="rw" Description="选择同步到 Unraid 的真实文件" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/onedrive</Config>
+  <Config Name="GRAPH_CLIENT_ID" Target="GRAPH_CLIENT_ID" Default="" Mode="" Description="单租户 Entra 应用 Client ID" Type="Variable" Display="always" Required="true" Mask="false"></Config>
+  <Config Name="GRAPH_TENANT_ID" Target="GRAPH_TENANT_ID" Default="5dldn8.onmicrosoft.com" Mode="" Description="Microsoft Entra 租户" Type="Variable" Display="always" Required="true" Mask="false">5dldn8.onmicrosoft.com</Config>
+  <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="Unraid 用户 ID" Type="Variable" Display="advanced" Required="true" Mask="false">99</Config>
+  <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="Unraid 组 ID" Type="Variable" Display="advanced" Required="true" Mask="false">100</Config>
+  <Config Name="TZ" Target="TZ" Default="Asia/Shanghai" Mode="" Description="时区" Type="Variable" Display="advanced" Required="true" Mask="false">Asia/Shanghai</Config>
+</Container>
