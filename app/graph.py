@@ -38,6 +38,7 @@ class GraphClient:
         self.last_checked_at: float | None = None
         self._check_lock = asyncio.Lock()
         self._poll_lock = asyncio.Lock()
+        self.account: dict[str, str] | None = None
 
     @property
     def token_url(self) -> str:
@@ -243,6 +244,16 @@ class GraphClient:
             except GraphError:
                 pass
             return self.auth_status()
+
+    async def profile(self) -> dict[str, str]:
+        if self.account:
+            return self.account
+        try:
+            data = await self._graph_get("https://graph.microsoft.com/v1.0/me?$select=displayName,userPrincipalName")
+        except GraphError:
+            return {}
+        self.account = {"displayName": str(data.get("displayName", "")), "userPrincipalName": str(data.get("userPrincipalName", ""))}
+        return self.account
 
     async def folders(self, parent_id: str = "root", cursor: str | None = None) -> dict[str, object]:
         if cursor:
