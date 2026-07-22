@@ -4,7 +4,9 @@ import asyncio
 import json
 import os
 from contextlib import asynccontextmanager
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from zoneinfo import ZoneInfo
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -36,6 +38,10 @@ class NotificationRequest(BaseModel):
     enabled: bool = False
     webhook_url: str = ""
     events: dict[str, bool] = Field(default_factory=dict)
+
+
+class HistorySettingsRequest(BaseModel):
+    retention_days: int = Field(ge=1, le=3650)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -131,6 +137,50 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             except (OSError, ValueError):
                 events = []
         return {"events": list(reversed(events[-limit:]))}
+
+    def read_transfer_events() -> list[dict[str, object]]:
+        path = settings.config_dir / "change-events.jsonl"
+        if not path.exists():
+            return []
+        try:
+            return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+        except (OSError, ValueError):
+            return []
+
+    @app.get("/api/transfers/stats")
+    async def transfer_stats(range: str = "24h", date: str | None = None) -> dict[str, object]:
+        tz = ZoneInfo(os.environ.get("TZ", "Asia/Shanghai")); now = datetime.now(tz)
+        if date:
+            start = datetime.fromisoformat(date).replace(tzinfo=tz); end = start + timedelta(days=1); label = date
+        elif range == "yesterday":
+            end = now.replace(hour=0, minute=0, second=0, microsecond=0); start = end - timedelta(days=1); label = "yesterday"
+        else:
+            end = now; start = now - timedelta(hours=24); label = "24h"
+        totals = {"download": {"files": 0, "bytes": 0}, "upload": {"files": 0, "bytes": 0}}
+        for event in read_transfer_events():
+            if event.get("status") != "completed" or event.get("mode") == "resync" and event.get("detail") == "dry_run": continue
+            try: stamp = datetime.fromisoformat(str(event.get("time"))).astimezone(tz)
+            except ValueError: continue
+            if not start <= stamp < end: continue
+            key = "download" if event.get("direction") == "cloud_to_local" and event.get("action") == "download" else "upload" if event.get("direction") == "local_to_cloud" and event.get("action") == "upload" else None
+            if key: totals[key]["files"] += 1; totals[key]["bytes"] += int(event.get("size") or 0)
+        return {"range": label, "start": start.isoformat(), "end": end.isoformat(), **totals}
+
+    @app.get("/api/transfers/settings")
+    async def transfer_settings() -> dict[str, int]:
+        value = read_json(settings.config_dir / "transfer-settings.json", {"retentionDays": 90})
+        return {"retentionDays": int(value.get("retentionDays", 90)) if isinstance(value, dict) else 90}
+
+    @app.put("/api/transfers/settings")
+    async def save_transfer_settings(request: HistorySettingsRequest) -> dict[str, int]:
+        write_json_private(settings.config_dir / "transfer-settings.json", {"retentionDays": request.retention_days})
+        cutoff = datetime.now(timezone.utc) - timedelta(days=request.retention_days); path = settings.config_dir / "change-events.jsonl"; kept = []
+        for event in read_transfer_events():
+            try:
+                if datetime.fromisoformat(str(event.get("time"))) >= cutoff: kept.append(event)
+            except ValueError: pass
+        if path.exists(): path.write_text("".join(json.dumps(event, ensure_ascii=False) + "\n" for event in kept), encoding="utf-8")
+        return {"retentionDays": request.retention_days}
 
     @app.get("/api/notifications")
     async def notification_settings() -> dict[str, object]:

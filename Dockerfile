@@ -1,6 +1,6 @@
 FROM driveone/onedrive:edge
 
-ARG APP_VERSION=dev
+ARG APP_VERSION=0.1.0
 
 USER root
 RUN apt-get update \

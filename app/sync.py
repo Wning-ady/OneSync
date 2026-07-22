@@ -4,6 +4,7 @@ import asyncio
 import json
 import os
 import re
+import time
 from collections import deque
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -31,12 +32,20 @@ class SyncManager:
     active_download: str | None = None
     active_upload: str | None = None
     _last_failed_path: str | None = None
+    download_percent: int | None = None
+    upload_percent: int | None = None
+    download_speed: float = 0
+    upload_speed: float = 0
+    download_bytes: int = 0
+    upload_bytes: int = 0
+    _download_sample: tuple[float, int] | None = None
+    _upload_sample: tuple[float, int] | None = None
 
     def _event_path(self) -> Path:
         return self.config_dir / "change-events.jsonl"
 
-    def _record(self, direction: str, action: str, path: str = "", status: str = "completed", detail: str = "") -> None:
-        event = {"time": datetime.now(timezone.utc).isoformat(), "direction": direction, "action": action, "path": path, "status": status, "detail": detail, "mode": self.mode}
+    def _record(self, direction: str, action: str, path: str = "", status: str = "completed", detail: str = "", size: int = 0) -> None:
+        event = {"time": datetime.now(timezone.utc).isoformat(), "direction": direction, "action": action, "path": path, "status": status, "detail": detail, "mode": self.mode, "size": size}
         self.events.append(event)
         self.config_dir.mkdir(parents=True, exist_ok=True)
         with self._event_path().open("a", encoding="utf-8") as file:
@@ -46,24 +55,42 @@ class SyncManager:
         self.logs.append(line)
         download = re.search(r"^Downloading file: (.+?) \.\.\. (done|failed!)$", line)
         upload = re.search(r"^Uploading (?:new |modified )?file: (.+?) \.\.\. (done|failed!)$", line)
-        progress = re.search(r"^Downloading: (.+?) \.\.\. (\d+)%", line)
+        progress = re.search(r"^(Downloading|Uploading): (.+?) \.\.\. (\d+)%", line)
         if progress:
-            self.active_download = progress.group(1)
+            kind, path, percent = progress.groups()
+            now = time.monotonic()
+            try: current_size = (self.data_dir / path).stat().st_size
+            except OSError: current_size = 0
+            if kind == "Downloading":
+                self.active_download, self.download_percent = path, int(percent)
+                if self._download_sample and now > self._download_sample[0]: self.download_speed = max(0, current_size - self._download_sample[1]) / (now - self._download_sample[0])
+                self._download_sample = (now, current_size); self.download_bytes = current_size
+            else:
+                self.active_upload, self.upload_percent = path, int(percent)
+                transferred = int(current_size * int(percent) / 100)
+                if self._upload_sample and now > self._upload_sample[0]: self.upload_speed = max(0, transferred - self._upload_sample[1]) / (now - self._upload_sample[0])
+                self._upload_sample = (now, transferred); self.upload_bytes = transferred
         if download:
             path, outcome = download.groups()
             self.active_download = None
+            self.download_percent = 100 if outcome == "done" else None
+            try: size = (self.data_dir / path).stat().st_size
+            except OSError: size = 0
             if outcome == "done":
                 self.completed_downloads += 1
-                self._record("cloud_to_local", "download", path)
+                self._record("cloud_to_local", "download", path, size=size)
             else:
                 self._last_failed_path = path
                 self._record("cloud_to_local", "download", path, "failed", "下载失败，正在确认原因")
         elif upload:
             path, outcome = upload.groups()
             self.active_upload = None
+            self.upload_percent = 100 if outcome == "done" else None
+            try: size = (self.data_dir / path).stat().st_size
+            except OSError: size = 0
             if outcome == "done":
                 self.completed_uploads += 1
-                self._record("local_to_cloud", "upload", path)
+                self._record("local_to_cloud", "upload", path, size=size)
             else:
                 self._record("local_to_cloud", "upload", path, "failed", "上传失败")
         elif line.startswith("Deleting remote file:"):
@@ -257,5 +284,5 @@ class SyncManager:
                 "startedAt": self.operation_started_at,
                 "finishedAt": self.operation_finished_at,
             },
-            "progress": {"downloadsCompleted": self.completed_downloads, "uploadsCompleted": self.completed_uploads, "activeDownload": self.active_download, "activeUpload": self.active_upload, "totalKnown": False},
+            "progress": {"downloadsCompleted": self.completed_downloads, "uploadsCompleted": self.completed_uploads, "activeDownload": self.active_download, "activeUpload": self.active_upload, "downloadPercent": self.download_percent, "uploadPercent": self.upload_percent, "downloadSpeed": self.download_speed, "uploadSpeed": self.upload_speed, "downloadBytes": self.download_bytes, "uploadBytes": self.upload_bytes},
         }
