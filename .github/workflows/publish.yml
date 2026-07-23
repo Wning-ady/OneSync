@@ -26,13 +26,23 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=semver,pattern={{version}}
             type=sha
+      - name: Resolve application version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+            version="${GITHUB_REF_NAME#v}"
+          else
+            version="$(sed -n 's/^ARG APP_VERSION=//p' Dockerfile)"
+          fi
+          echo "value=${version}" >> "$GITHUB_OUTPUT"
       - uses: docker/build-push-action@v6
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          build-args: APP_VERSION=0.1.0
+          build-args: APP_VERSION=${{ steps.version.outputs.value }}
 
   release:
     if: startsWith(github.ref, 'refs/tags/v')
@@ -44,13 +54,14 @@ jobs:
           body: |
             ## OneSync ${{ github.ref_name }}
 
-            本版本提供 OneDrive 双向同步管理能力：可选择同步目录、查看实时传输进度与同步日志，并支持 Webhook 通知。
+            本版本完善 OneDrive 双向同步管理体验，修复连接与传输状态显示问题。
 
             ### 更新内容
-            - 优化同步状态、日志与历史传输统计展示
-            - 支持云端与本地变更方向、文件状态及冲突信息
-            - 改进设备授权、Graph 连接状态和通知配置
-            - 提供 Unraid XML 部署模板与 Docker Hub 镜像
+            - 修复旧页面缓存导致的 `Failed to fetch`，兼容旧 Graph 状态接口
+            - 显示真实文件传输百分比、下载体积及上传下载速度
+            - 下载速度正确读取 OneDrive 的 `.partial` 临时文件
+            - 重新设计传输进度区域，移除变更记录页面
+            - 保留同步日志、Webhook 通知与 Unraid XML 部署支持
 
             GitHub Release 仅包含版本说明，不上传软件包或附件。镜像请从 Docker Hub 获取。
           generate_release_notes: true
