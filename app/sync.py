@@ -44,6 +44,21 @@ class SyncManager:
     def _event_path(self) -> Path:
         return self.config_dir / "change-events.jsonl"
 
+    def _transfer_size(self, path: str, direction: str) -> int:
+        """Read the file currently written by the OneDrive client.
+
+        Downloads are staged as ``.partial`` files until completion, while uploads
+        read the final local file directly.
+        """
+        target = self.data_dir / path
+        candidates = [target.with_name(f"{target.name}.partial"), target] if direction == "download" else [target]
+        for candidate in candidates:
+            try:
+                return candidate.stat().st_size
+            except OSError:
+                continue
+        return 0
+
     def _record(self, direction: str, action: str, path: str = "", status: str = "completed", detail: str = "", size: int = 0) -> None:
         event = {"time": datetime.now(timezone.utc).isoformat(), "direction": direction, "action": action, "path": path, "status": status, "detail": detail, "mode": self.mode, "size": size}
         self.events.append(event)
@@ -59,13 +74,13 @@ class SyncManager:
         if progress:
             kind, path, percent = progress.groups()
             now = time.monotonic()
-            try: current_size = (self.data_dir / path).stat().st_size
-            except OSError: current_size = 0
             if kind == "Downloading":
+                current_size = self._transfer_size(path, "download")
                 self.active_download, self.download_percent = path, int(percent)
                 if self._download_sample and now > self._download_sample[0]: self.download_speed = max(0, current_size - self._download_sample[1]) / (now - self._download_sample[0])
                 self._download_sample = (now, current_size); self.download_bytes = current_size
             else:
+                current_size = self._transfer_size(path, "upload")
                 self.active_upload, self.upload_percent = path, int(percent)
                 transferred = int(current_size * int(percent) / 100)
                 if self._upload_sample and now > self._upload_sample[0]: self.upload_speed = max(0, transferred - self._upload_sample[1]) / (now - self._upload_sample[0])
@@ -74,8 +89,7 @@ class SyncManager:
             path, outcome = download.groups()
             self.active_download = None
             self.download_percent = 100 if outcome == "done" else None
-            try: size = (self.data_dir / path).stat().st_size
-            except OSError: size = 0
+            size = self._transfer_size(path, "download")
             if outcome == "done":
                 self.completed_downloads += 1
                 self._record("cloud_to_local", "download", path, size=size)
@@ -86,8 +100,7 @@ class SyncManager:
             path, outcome = upload.groups()
             self.active_upload = None
             self.upload_percent = 100 if outcome == "done" else None
-            try: size = (self.data_dir / path).stat().st_size
-            except OSError: size = 0
+            size = self._transfer_size(path, "upload")
             if outcome == "done":
                 self.completed_uploads += 1
                 self._record("local_to_cloud", "upload", path, size=size)

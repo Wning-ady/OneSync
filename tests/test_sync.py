@@ -84,3 +84,20 @@ async def test_successful_resync_does_not_start_monitor(monkeypatch, tmp_path) -
 
     assert manager.status()["operation"]["phase"] == "succeeded"  # type: ignore[index]
     assert manager.mode == "stopped"
+
+
+@pytest.mark.asyncio
+async def test_download_metrics_read_partial_file(tmp_path) -> None:
+    manager = SyncManager(tmp_path / "config", tmp_path / "data")
+    partial = manager.data_dir / "docs" / "archive.bin.partial"
+    partial.parent.mkdir(parents=True)
+    partial.write_bytes(b"x" * 100)
+    manager._append_log("Downloading: docs/archive.bin ... 5%")
+    await asyncio.sleep(0.01)
+    partial.write_bytes(b"x" * 300)
+    manager._append_log("Downloading: docs/archive.bin ... 10%")
+
+    progress = manager.status()["progress"]
+    assert progress["activeDownload"] == "docs/archive.bin"  # type: ignore[index]
+    assert progress["downloadBytes"] == 300  # type: ignore[index]
+    assert progress["downloadSpeed"] > 0  # type: ignore[index]
