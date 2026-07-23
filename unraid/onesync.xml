@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <Container version="2">
   <Name>OneSync</Name>
-  <Repository>waning/onesync:latest</Repository>
+  <Repository>waning/onesync:0.1.3</Repository>
   <Registry>https://hub.docker.com/r/waning/onesync</Registry>
   <Network>bridge</Network>
   <WebUI>http://[IP]:[PORT:8098]/</WebUI>

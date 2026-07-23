@@ -19,12 +19,14 @@
     .workspace { display:grid; grid-template-columns:minmax(0,1fr) 360px; align-items:start; gap:22px; } .side { display:grid; gap:18px; } .panel { min-width:0; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 1px 1px rgba(18,36,31,.03); overflow:hidden; } .panel-head { min-height:58px; padding:12px 16px; display:flex; align-items:center; gap:12px; background:#fff; border-bottom:1px solid var(--line); } .panel-head h2 { margin:0; font-size:15px; font-weight:720; } .panel-head .sub { color:var(--muted); font-size:12px; } .panel-head .actions { margin-left:auto; display:flex; gap:8px; } .panel-body { padding:16px; }
     .folder-panel { min-height:548px; } .folder-toolbar { min-height:50px; padding:8px 16px; display:flex; align-items:center; gap:10px; background:var(--soft); border-bottom:1px solid var(--line); } .selection-meta { color:var(--muted); margin-right:auto; font-variant-numeric:tabular-nums; } .dirty { color:var(--warn); font-weight:650; } .folder-tree { height:432px; margin:0; padding:6px 0 18px; overflow:auto; list-style:none; scrollbar-color:#b8c8c1 transparent; } .folder-tree ul { margin:0; padding:0 0 0 18px; list-style:none; } .folder-row { min-height:42px; display:grid; grid-template-columns:30px 24px minmax(0,1fr); align-items:center; padding:3px 14px 3px 8px; border-bottom:1px solid #eef2f0; } .folder-row:hover { background:#f0f8f5; } .expand { width:28px; min-height:28px; padding:0; border-color:transparent; background:transparent; font-size:17px; line-height:1; } .folder-check { width:16px; height:16px; margin:0; accent-color:var(--brand); } .folder-label { min-width:0; cursor:pointer; } .folder-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:620; } .folder-path { display:block; overflow:hidden; color:var(--muted); font-size:11px; text-overflow:ellipsis; white-space:nowrap; } .empty-state { padding:76px 20px; color:var(--muted); text-align:center; } .folder-footer { min-height:62px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid var(--line); } .inline-note { color:var(--muted); font-size:12px; }
     .engine-state { display:grid; grid-template-columns:1fr auto; gap:7px 16px; padding-bottom:16px; border-bottom:1px solid var(--line); } .state-main { font-size:20px; font-weight:720; } .state-detail { grid-column:1/-1; color:var(--muted); font-size:12px; } .button-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:16px; } .button-grid button,.full-width { width:100%; } .full-width { margin-top:8px; } .operation { display:none; margin-top:14px; padding:12px; background:#eaf7f1; border-left:3px solid var(--brand); } .operation.show { display:block; } .operation.success { color:#155d3f; background:#edf9f1; border-color:var(--good); } .operation.error { color:#84251d; background:#fff0ee; border-color:var(--bad); } .operation-title { font-weight:720; } .operation-detail { margin-top:4px; font-size:12px; overflow-wrap:anywhere; } .phase-track { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; margin-top:10px; } .phase-track span { height:3px; background:#ccd9d3; } .phase-track span.done,.phase-track span.active { background:var(--brand); }
-    .auth-row { display:flex; align-items:center; gap:10px; } .auth-copy { min-width:0; flex:1; } .auth-title { font-weight:720; } .auth-detail { color:var(--muted); font-size:12px; line-height:1.45; overflow-wrap:anywhere; } .auth-title.error { color:var(--bad); } .auth-title.pending { color:#287aaf; } .auth-title.verified { color:var(--good); } .device { display:none; margin-top:14px; padding:13px; background:#fff8e8; border:1px solid #ead49c; border-radius:6px; } .device.show { display:block; } .device-code { display:block; width:100%; margin:8px 0; padding:9px 10px; color:var(--ink); background:#fffdf7; border:1px dashed #c89b42; border-radius:5px; font:650 22px ui-monospace,SFMono-Regular,Consolas,monospace; text-align:left; user-select:all; cursor:copy; } .device-actions { display:flex; flex-wrap:wrap; gap:8px; } .device a { display:inline-flex; align-items:center; min-height:38px; padding:8px 12px; color:#fff; background:var(--brand); border-radius:6px; text-decoration:none; }
+    .auth-row { display:flex; align-items:center; gap:10px; } .auth-copy { min-width:0; flex:1; } .auth-title { font-weight:720; } .auth-detail { color:var(--muted); font-size:12px; line-height:1.45; overflow-wrap:anywhere; } .auth-title.error { color:var(--bad); } .auth-title.pending { color:#287aaf; } .auth-title.verified { color:var(--good); } .device { display:none; margin-top:14px; padding:13px; background:#fff8e8; border:1px solid #ead49c; border-radius:6px; } .device.show { display:block; } .device-code { display:block; width:100%; margin:8px 0; padding:9px 10px; color:var(--ink); background:#fffdf7; border:1px dashed #c89b42; border-radius:5px; font:650 22px ui-monospace,SFMono-Regular,Consolas,monospace; text-align:left; user-select:all; cursor:copy; } .device-actions { display:flex; flex-wrap:wrap; gap:8px; } .device a,.auth-dialog a { display:inline-flex; align-items:center; min-height:38px; padding:8px 12px; color:#fff; background:var(--brand); border-radius:6px; text-decoration:none; }
     .transfer-progress { margin-top:16px; padding:14px; background:var(--soft); border:1px solid var(--line); border-radius:6px; } .progress-head { display:flex; justify-content:space-between; gap:12px; font-size:12px; } .progress-head span { min-width:0; overflow:hidden; color:var(--muted); text-align:right; text-overflow:ellipsis; white-space:nowrap; } .progress-row { display:grid; grid-template-columns:minmax(0,1fr) 42px; gap:9px; align-items:center; margin:10px 0 9px; } .progress-track { height:8px; overflow:hidden; background:#d9e5df; border-radius:4px; } .progress-track span { display:block; width:0; height:100%; background:#1677ff; transition:none; } .transfer-progress[data-direction="upload"] .progress-track span { background:var(--brand); } .progress-metrics { display:grid; grid-template-columns:1fr 1fr; gap:10px; color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; } .progress-metrics span:last-child { text-align:right; } #progressPercent { color:var(--ink); font-size:13px; font-variant-numeric:tabular-nums; text-align:right; }
     .logs-panel { margin-top:22px; } .log-tools { display:flex; align-items:center; gap:10px; margin-left:auto; } .toggle { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:12px; } .log-output { height:300px; margin:0; padding:15px; overflow:auto; color:#dce8e2; background:#192522; font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace; overflow-wrap:anywhere; white-space:pre-wrap; scrollbar-color:#52645d #192522; } .spinner { display:inline-block; width:13px; height:13px; margin-right:6px; vertical-align:-2px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin .8s linear infinite; } @keyframes spin { to { transform:rotate(360deg); } }
-    .about-shell { max-width:1000px; margin:0 auto; } .about-hero { padding:48px 0 34px; border-bottom:1px solid var(--line); } .about-kicker { margin:0 0 10px; color:var(--brand); font-size:12px; font-weight:720; } .about-hero h2 { max-width:680px; margin:0; font-size:34px; line-height:1.18; font-weight:760; text-wrap:balance; } .about-hero p { max-width:620px; margin:16px 0 0; color:var(--muted); font-size:15px; line-height:1.7; } .about-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; padding-top:28px; } .about-block { min-width:0; padding:22px 0; border-top:2px solid var(--ink); } .about-block h3 { margin:0 0 10px; font-size:17px; } .about-block p { margin:0; color:var(--muted); line-height:1.7; overflow-wrap:anywhere; } .about-meta { display:grid; gap:10px; margin-top:20px; } .about-meta div { display:flex; justify-content:space-between; gap:16px; padding-bottom:10px; border-bottom:1px solid var(--line); } .about-meta span { flex:0 0 auto; color:var(--muted); } .about-meta strong,.about-meta a { min-width:0; text-align:right; } .about-meta a { color:var(--brand-deep); font-weight:650; overflow-wrap:anywhere; } .support { grid-column:1/-1; padding:28px; color:#eef7f3; background:var(--night); border-radius:8px; } .support h3 { margin:0 0 10px; font-size:22px; } .support p { max-width:700px; margin:0; color:#b9cbc4; line-height:1.7; } .qr-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:24px; } .qr-card { padding:14px; color:var(--ink); background:#fff; border-radius:6px; } .qr-card img { display:block; width:100%; aspect-ratio:1; object-fit:contain; background:#fff; border-radius:4px; } .qr-card strong { display:block; margin:12px 0 3px; } .qr-card span { color:var(--muted); font-size:12px; }
-    .qr-card:first-child { border:2px solid #07c160; } .qr-card:nth-child(2) { border:2px solid #1677ff; } .notification-panel { margin-top:28px; } .notify-enable,.notify-events { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:18px; } .notify-field { display:grid; gap:7px; max-width:680px; margin-bottom:18px; font-weight:650; } .notify-field input { min-height:40px; padding:8px 10px; border:1px solid #bfcac6; border-radius:6px; }
-    @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } } @media (max-width:980px) { .workspace { grid-template-columns:1fr; } .folder-panel { min-height:500px; } } @media (max-width:680px) { .topbar-inner,main { width:min(calc(100% - 24px),1380px); } .topbar-inner { min-height:104px; flex-wrap:wrap; gap:0 12px; } .brand { width:100%; height:52px; } .brand span,.refresh-time { display:none; } .main-nav { order:3; height:44px; } .main-nav button { padding:0 10px; } .top-statuses { margin-left:auto; } .top-statuses .status-item { padding:5px 7px; font-size:12px; } main { margin-top:16px; } .folder-tree { height:360px; } .folder-footer .inline-note { display:none; } .folder-footer button { width:100%; } .panel-head { align-items:flex-start; flex-wrap:wrap; } .panel-head .actions { width:100%; } .log-tools { width:100%; margin-left:0; } .logs-panel .panel-head { gap:8px; } .about-hero { padding:26px 0; } .about-hero h2 { font-size:28px; } .about-grid,.qr-grid { grid-template-columns:1fr; } .support { padding:20px; } .button-grid { gap:7px; } }
+    .about-shell { max-width:1000px; margin:0 auto; } .about-hero { padding:48px 0 34px; border-bottom:1px solid var(--line); } .about-kicker { margin:0 0 10px; color:var(--brand); font-size:12px; font-weight:720; } .about-hero h2 { max-width:680px; margin:0; font-size:34px; line-height:1.18; font-weight:760; text-wrap:balance; } .about-hero p { max-width:620px; margin:16px 0 0; color:var(--muted); font-size:15px; line-height:1.7; } .about-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; padding-top:28px; } .about-block { min-width:0; padding:22px 0; border-top:2px solid var(--ink); } .about-block h3 { margin:0 0 10px; font-size:17px; } .about-block p { margin:0; color:var(--muted); line-height:1.7; overflow-wrap:anywhere; } .about-meta { display:grid; gap:10px; margin-top:20px; } .about-meta div { display:flex; justify-content:space-between; gap:16px; padding-bottom:10px; border-bottom:1px solid var(--line); } .about-meta span { flex:0 0 auto; color:var(--muted); } .about-meta strong,.about-meta a { min-width:0; text-align:right; } .about-meta a { color:var(--brand-deep); font-weight:650; overflow-wrap:anywhere; } .support { grid-column:1/-1; padding:28px; color:#eef7f3; background:var(--night); border-radius:8px; } .support h3 { margin:0 0 10px; font-size:22px; } .support p { max-width:700px; margin:0; color:#b9cbc4; line-height:1.7; } .qr-grid { display:grid; grid-template-columns:repeat(2,180px); gap:16px; margin-top:20px; } .qr-card { padding:12px; color:var(--ink); background:#fff; border-radius:6px; } .qr-card img { display:block; width:154px; height:154px; object-fit:contain; background:#fff; border-radius:4px; } .qr-card strong { display:block; margin:10px 0 3px; } .qr-card span { color:var(--muted); font-size:12px; }
+    .qr-card:first-child { border:2px solid #07c160; } .qr-card:nth-child(2) { border:2px solid #1677ff; } .notification-panel { margin-top:28px; } .notify-enable,.notify-events { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:18px; } .notify-field { display:grid; gap:7px; max-width:680px; margin-bottom:18px; font-weight:650; } .notify-field input { min-height:40px; padding:8px 10px; border:1px solid #bfcac6; border-radius:6px; } .auth-dialog { width:min(460px,calc(100% - 28px)); padding:0; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:8px; box-shadow:0 18px 60px rgba(10,25,20,.24); } .auth-dialog::backdrop { background:rgba(14,24,21,.56); } .dialog-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line); } .dialog-head h2 { margin:0; font-size:17px; } .dialog-close { width:34px; min-height:34px; padding:0; font-size:22px; line-height:1; } .dialog-body { padding:18px; } .sync-auth-code { display:block; width:100%; margin:14px 0 10px; padding:14px; color:var(--ink); background:#f7faf9; border:1px dashed #8aa99d; border-radius:6px; font:700 26px ui-monospace,SFMono-Regular,Consolas,monospace; text-align:center; user-select:all; } .sync-auth-code:disabled { opacity:1; cursor:wait; } .dialog-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; } .dialog-actions a[aria-disabled="true"] { opacity:.45; pointer-events:none; }
+    @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } } @media (max-width:980px) { .workspace { grid-template-columns:1fr; } .folder-panel { min-height:500px; } } @media (max-width:680px) { .topbar-inner,main { width:min(calc(100% - 24px),1380px); } .topbar-inner { min-height:104px; flex-wrap:wrap; gap:0 12px; } .brand { width:100%; height:52px; } .brand span,.refresh-time { display:none; } .main-nav { order:3; height:44px; } .main-nav button { padding:0 10px; } .top-statuses { margin-left:auto; } .top-statuses .status-item { padding:5px 7px; font-size:12px; } main { margin-top:16px; } .folder-tree { height:360px; } .folder-footer .inline-note { display:none; } .folder-footer button { width:100%; } .panel-head { align-items:flex-start; flex-wrap:wrap; } .panel-head .actions { width:100%; } .log-tools { width:100%; margin-left:0; } .logs-panel .panel-head { gap:8px; } .about-hero { padding:26px 0; } .about-hero h2 { font-size:28px; } .about-grid { grid-template-columns:1fr; } .qr-grid { grid-template-columns:repeat(2,minmax(0,140px)); } .qr-card img { width:114px; height:114px; } .support { padding:20px; } .button-grid { gap:7px; } }
+    .auth-dialog { max-height:calc(100dvh - 28px); overflow:auto; overscroll-behavior:contain; }
+    @media (max-width:680px) { .qr-grid { grid-template-columns:220px; max-width:220px; } .qr-card img { width:192px; height:192px; } }
   </style>
 </head>
 <body>
@@ -79,7 +81,7 @@
               <button class="primary sync-command" data-action="start" type="button" title="持续监控本地与云端改动；网络异常请查看状态">持续同步</button>
               <button class="sync-command" data-action="once" type="button" title="执行一次增量同步，完成后自动停止">同步一次</button>
               <button class="sync-command danger" data-action="stop" type="button" title="终止当前传输，不删除本地或云端文件">停止</button>
-              <button class="sync-command" data-action="reauth" type="button" title="仅重新授权 OneDrive 同步引擎，请完成设备代码登录">同步授权</button>
+              <button id="syncReauthButton" class="sync-command" data-action="reauth" type="button" title="打开 Microsoft 设备代码授权窗口；完成后自动恢复持续同步">同步授权</button>
             </div>
             <button id="resyncButton" class="full-width" type="button" title="先执行 dry-run，再进行重同步；可能耗时且不会恢复持续监控">受控重同步</button>
             <div id="operation" class="operation" role="status" aria-live="polite">
@@ -117,7 +119,7 @@
     </section>
     </section>
 
-    <section id="notificationsView" class="view" hidden aria-labelledby="notificationsTitle"><div class="about-shell"><header class="about-hero"><p class="about-kicker">WEBHOOK ALERTS</p><h2 id="notificationsTitle">通知设置</h2><p>同步错误、云端对象缺失或 Graph 断线时，将向您配置的 Webhook 发送通知。地址不会回显到页面或日志。</p></header><section class="panel notification-panel"><div class="panel-body"><label class="notify-enable"><input id="notificationEnabled" type="checkbox"> 启用 Webhook 通知</label><label class="notify-field">Webhook 地址<input id="notificationUrl" type="url" inputmode="url" autocomplete="off" placeholder="https://…"></label><div class="notify-events"><label><input id="notifySyncError" type="checkbox" checked> 同步错误 / 云端对象缺失</label><label><input id="notifyGraphError" type="checkbox" checked> Graph 掉线</label></div><div class="device-actions"><button id="saveNotificationsButton" class="primary" type="button" title="安全保存 Webhook 设置">保存通知设置</button><button id="testNotificationsButton" type="button" title="向当前 Webhook 发送测试通知">发送测试通知</button></div><p id="notificationStatus" class="auth-detail"></p></div></section></div></section>
+    <section id="notificationsView" class="view" hidden aria-labelledby="notificationsTitle"><div class="about-shell"><header class="about-hero"><p class="about-kicker">WEBHOOK ALERTS</p><h2 id="notificationsTitle">通知设置</h2><p>同步错误、云端对象缺失或 Graph 断线时，将向您配置的 Webhook 发送通知。保存后会显示脱敏地址，密钥不会出现在日志中。</p></header><section class="panel notification-panel"><div class="panel-body"><label class="notify-enable"><input id="notificationEnabled" type="checkbox"> 启用 Webhook 通知</label><label class="notify-field">Webhook 地址<input id="notificationUrl" name="webhook_url" type="url" inputmode="url" autocomplete="off" placeholder="https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=…"><span class="auth-detail">保存后输入框会清空；留空再次保存会保留当前地址。</span></label><div class="notify-events"><label><input id="notifySyncError" type="checkbox" checked> 同步错误 / 云端对象缺失</label><label><input id="notifyGraphError" type="checkbox" checked> Graph 掉线</label></div><div class="device-actions"><button id="saveNotificationsButton" class="primary" type="button" title="安全保存 Webhook 设置">保存通知设置</button><button id="testNotificationsButton" type="button" title="向当前 Webhook 发送测试通知">发送测试通知</button></div><p id="notificationStatus" class="auth-detail" role="status" aria-live="polite" aria-atomic="true"></p></div></section></div></section>
 
     <section id="aboutView" class="view" hidden aria-labelledby="aboutTitle">
       <div class="about-shell">
@@ -144,8 +146,8 @@
             <h3 id="supportTitle">最后的最后</h3>
             <p>如果您觉得 OneSync 对您有帮助，可以请我喝一瓶快乐水。您的支持是我持续维护和更新项目的最大动力！</p>
             <div class="qr-grid">
-              <div class="qr-card"><img src="/static/donate-wechat.jpg" width="832" height="1176" loading="lazy" alt="微信支付收款二维码"><strong>微信支付</strong><span>打开微信扫一扫</span></div>
-              <div class="qr-card"><img src="/static/donate-alipay.jpg" width="831" height="1280" loading="lazy" alt="支付宝收款二维码"><strong>支付宝</strong><span>打开支付宝扫一扫</span></div>
+              <div class="qr-card"><img src="/static/donate-wechat-qr.png" width="154" height="154" loading="lazy" alt="微信支付收款二维码"><strong>微信支付</strong><span>打开微信扫一扫</span></div>
+              <div class="qr-card"><img src="/static/donate-alipay-qr.png" width="154" height="154" loading="lazy" alt="支付宝收款二维码"><strong>支付宝</strong><span>打开支付宝扫一扫</span></div>
             </div>
           </section>
         </div>
@@ -153,13 +155,22 @@
     </section>
   </main>
 
+  <dialog id="syncAuthDialog" class="auth-dialog" aria-labelledby="syncAuthTitle">
+    <div class="dialog-head"><h2 id="syncAuthTitle">Microsoft 同步授权</h2><button id="closeSyncAuthButton" class="dialog-close" type="button" aria-label="关闭授权窗口">×</button></div>
+    <div class="dialog-body">
+      <p id="syncAuthMessage" class="auth-detail" role="status" aria-live="polite">正在向 Microsoft 获取设备代码…</p>
+      <button id="syncAuthCode" class="sync-auth-code" type="button" disabled aria-label="复制同步授权码">等待代码</button>
+      <div class="dialog-actions"><button id="copySyncAuthButton" type="button" disabled>复制授权码</button><a id="syncAuthLink" target="_blank" rel="noopener" aria-disabled="true" tabindex="-1">打开登录页</a></div>
+    </div>
+  </dialog>
+
   <script>
     const el = Object.fromEntries([...document.querySelectorAll('[id]')].map(node => [node.id, node]));
     const state = {
       health: null, selectedIds: new Set(), selectedPaths: new Set(), savedPaths: new Set(),
       folderCache: new Map(), folderItems: new Map(), busy: new Set(), logsText: '',
       pollTimer: null, graphCheckTimer: null, graphPollTimer: null, graphCheckInFlight: false, graphCheckAt: 0,
-      graphPollActive: false, graphPollInFlight: false, operationDismissed: null
+      graphPollActive: false, graphPollInFlight: false, operationDismissed: null, syncAuthCloseTimer: null
     };
     const activePhases = new Set(['queued','dry_run','resync','restarting_monitor']);
     const modeLabels = {monitor:'持续同步中',once:'单次同步中',stopped:'已停止',reauth:'等待同步授权',resync_pending:'准备重同步',resync:'正在重同步'};
@@ -231,7 +242,27 @@
         uploading ? `本地 → 云端 · 已发送 ${formatBytes(currentBytes)}` : '',
         `下载完成 ${progress.downloadsCompleted || 0}，上传完成 ${progress.uploadsCompleted || 0}`,
       ].filter(Boolean).join(' · ');
+      updateSyncAuthorization(sync.authorization || {});
       updateOperation(sync.operation || {});
+    }
+    function openSyncAuthorization() {
+      clearTimeout(state.syncAuthCloseTimer);
+      el.syncAuthMessage.textContent='正在向 Microsoft 获取设备代码…';
+      el.syncAuthCode.textContent='等待代码'; el.syncAuthCode.dataset.code=''; el.syncAuthCode.disabled=true;
+      el.copySyncAuthButton.disabled=true; el.syncAuthLink.removeAttribute('href'); el.syncAuthLink.tabIndex=-1; el.syncAuthLink.setAttribute('aria-disabled','true');
+      if(!el.syncAuthDialog.open) el.syncAuthDialog.showModal();
+    }
+    function updateSyncAuthorization(auth) {
+      if(!el.syncAuthDialog.open) return;
+      const code=String(auth.userCode||'').trim(), uri=String(auth.verificationUri||'').trim();
+      if(code){el.syncAuthCode.textContent=code;el.syncAuthCode.dataset.code=code;el.syncAuthCode.disabled=false;el.copySyncAuthButton.disabled=false;}
+      if(uri){
+        try{const link=new URL(uri);if(link.protocol==='https:' && /(^|\.)microsoft(?:online)?\.com$/i.test(link.hostname)){el.syncAuthLink.href=link.href;el.syncAuthLink.tabIndex=0;el.syncAuthLink.removeAttribute('aria-disabled');}}catch{}
+      }
+      el.syncAuthMessage.textContent=auth.message||({starting:'正在获取设备代码…',pending:'请打开 Microsoft 登录页并输入授权码。',authorized:'授权成功，正在恢复持续同步。',failed:'授权失败，请关闭后重试。'}[auth.state]||'等待授权状态…');
+      if(auth.state==='authorized'){
+        clearTimeout(state.syncAuthCloseTimer);state.syncAuthCloseTimer=setTimeout(()=>{if(el.syncAuthDialog.open)el.syncAuthDialog.close();},3000);
+      }
     }
     function updateOperation(op) {
       if (!op.phase || op.phase === 'idle') { el.operation.className = 'operation'; return; }
@@ -312,7 +343,13 @@
       if (el.followLogs.checked && atBottom) el.logs.scrollTop = el.logs.scrollHeight;
     }
     async function syncAction(action, button) {
-      await withBusy(`sync-${action}`, button, async () => { await api(`/api/sync/${action}`,{method:'POST'}); await refreshNow(); });
+      if(action==='reauth') openSyncAuthorization();
+      try {
+        await withBusy(`sync-${action}`, button, async () => { await api(`/api/sync/${action}`,{method:'POST'}); await refreshNow(); });
+      } catch(error) {
+        if(action==='reauth') el.syncAuthMessage.textContent=error.message||'无法启动同步授权。';
+        throw error;
+      }
     }
     async function refreshNow() { clearTimeout(state.pollTimer); await refresh(); }
     async function resync() {
@@ -435,16 +472,18 @@
         try{copied=typeof document.execCommand==='function' && document.execCommand('copy');}catch{copied=false;}finally{area.remove();}
       }
       if(!copied) throw new Error('浏览器禁止自动复制，请选中代码后按 Ctrl+C（Mac 按 ⌘+C）。');
-      const original=button.textContent;button.textContent=successLabel;button.setAttribute('aria-label',successLabel);setTimeout(()=>{button.textContent=original;button.removeAttribute('aria-label');},1200);
+      const original=button.textContent, originalAria=button.getAttribute('aria-label');button.textContent=successLabel;button.setAttribute('aria-label',successLabel);setTimeout(()=>{button.textContent=original;if(originalAria===null)button.removeAttribute('aria-label');else button.setAttribute('aria-label',originalAria);},1200);
     }
     function reportCopyError(error) {
       const message=error.message||'复制失败。';
-      if(el.device.classList.contains('show')) el.deviceMessage.textContent=message;
+      if(el.syncAuthDialog.open) el.syncAuthMessage.textContent=message;
+      else if(el.device.classList.contains('show')) el.deviceMessage.textContent=message;
       setGlobalError(message);
     }
 
-    async function loadNotifications() { const data=await api('/api/notifications'); el.notificationEnabled.checked=Boolean(data.enabled); el.notifySyncError.checked=data.events?.syncError !== false; el.notifyGraphError.checked=data.events?.graphDisconnected !== false; el.notificationStatus.textContent=data.configured ? `已配置 Webhook：${data.endpointHost}` : '尚未配置 Webhook 地址。'; }
-    async function saveNotifications() { const result=await api('/api/notifications',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:el.notificationEnabled.checked,webhook_url:el.notificationUrl.value,events:{syncError:el.notifySyncError.checked,graphDisconnected:el.notifyGraphError.checked}})}); el.notificationUrl.value=''; el.notificationStatus.textContent=result.configured?`已保存 Webhook：${result.endpointHost}`:'通知已关闭。'; }
+    function notificationLabel(data) { const endpoint=data.endpointPreview||data.endpointHost; return data.enabled ? `通知已启用：${endpoint}` : data.configured ? `通知已关闭，已保留：${endpoint}` : '尚未配置 Webhook 地址。'; }
+    async function loadNotifications() { const data=await api('/api/notifications'); el.notificationEnabled.checked=Boolean(data.enabled); el.notifySyncError.checked=data.events?.syncError !== false; el.notifyGraphError.checked=data.events?.graphDisconnected !== false; el.notificationStatus.textContent=notificationLabel(data); }
+    async function saveNotifications() { const result=await api('/api/notifications',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:el.notificationEnabled.checked,webhook_url:el.notificationUrl.value,events:{syncError:el.notifySyncError.checked,graphDisconnected:el.notifyGraphError.checked}})}); el.notificationUrl.value=''; el.notificationStatus.textContent=notificationLabel(result); }
 
     function setView(view) {
       const views={sync:el.syncView,notifications:el.notificationsView,about:el.aboutView}; const buttons={sync:el.syncNavButton,notifications:el.notificationsNavButton,about:el.aboutNavButton};
@@ -459,15 +498,18 @@
     el.saveSelectionButton.addEventListener('click',()=>saveSelection().catch(()=>{}));
     el.graphAuthButton.addEventListener('click',()=>startGraphAuth().catch(()=>{}));
     el.copyDeviceButton.addEventListener('click',()=>copyText(el.deviceCode.textContent,'已复制',el.copyDeviceButton).catch(reportCopyError));
-    el.deviceCode.addEventListener('click',()=>copyText(el.deviceCode.textContent,'已复制',el.deviceCode).catch(reportCopyError));
+    el.deviceCode.addEventListener('click',()=>copyText(el.deviceCode.textContent,'已复制',el.copyDeviceButton).catch(reportCopyError));
+    el.syncAuthCode.addEventListener('click',()=>copyText(el.syncAuthCode.dataset.code,'已复制',el.copySyncAuthButton).catch(reportCopyError));
+    el.copySyncAuthButton.addEventListener('click',()=>copyText(el.syncAuthCode.dataset.code,'已复制',el.copySyncAuthButton).catch(reportCopyError));
+    el.closeSyncAuthButton.addEventListener('click',()=>el.syncAuthDialog.close());
     el.copyLogsButton.addEventListener('click',()=>copyText(state.logsText,'已复制',el.copyLogsButton).catch(reportCopyError));
     el.clearLogsButton.addEventListener('click',()=>{el.logs.textContent='';el.logCount.textContent='0 行';});
     el.logs.addEventListener('scroll',()=>{if(el.logs.scrollTop+el.logs.clientHeight<el.logs.scrollHeight-24)el.followLogs.checked=false;});
     el.syncNavButton.addEventListener('click',()=>setView('sync'));
     el.notificationsNavButton.addEventListener('click',()=>setView('notifications'));
     el.aboutNavButton.addEventListener('click',()=>setView('about'));
-    el.saveNotificationsButton.addEventListener('click',()=>saveNotifications().catch(error=>setGlobalError(error.message)));
-    el.testNotificationsButton.addEventListener('click',()=>api('/api/notifications/test',{method:'POST'}).then(()=>{el.notificationStatus.textContent='测试通知已发送。';}).catch(error=>setGlobalError(error.message)));
+    el.saveNotificationsButton.addEventListener('click',()=>withBusy('notifications-save',el.saveNotificationsButton,saveNotifications).catch(error=>{el.notificationStatus.textContent=error.message;}));
+    el.testNotificationsButton.addEventListener('click',()=>withBusy('notifications-test',el.testNotificationsButton,async()=>{await api('/api/notifications/test',{method:'POST'});el.notificationStatus.textContent='测试通知已发送。';}).catch(error=>{el.notificationStatus.textContent=error.message;}));
     window.addEventListener('hashchange',()=>setView(['notifications','about'].includes(location.hash.slice(1))?location.hash.slice(1):'sync'));
 
     setView(['notifications','about'].includes(location.hash.slice(1))?location.hash.slice(1):'sync');
