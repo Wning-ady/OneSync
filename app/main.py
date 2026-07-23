@@ -4,6 +4,7 @@ import asyncio
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Optional
 
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
@@ -15,7 +16,7 @@ from .graph import GraphClient, GraphError
 from .notifications import NotificationError, NotificationManager
 from .selection import SelectionStore
 from .settings import Settings
-from .storage import read_json
+from .storage import read_json, write_json_private
 from .sync import SyncManager
 
 
@@ -237,7 +238,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise bad_request(error)
 
     @app.get("/api/folders")
-    async def folders(parent_id: str = "root", cursor: str | None = None) -> dict[str, object]:
+    async def folders(parent_id: str = "root", cursor: Optional[str] = None) -> dict[str, object]:
         try:
             return await graph.folders(parent_id, cursor)
         except GraphError as error:
