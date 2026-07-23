@@ -54,15 +54,17 @@ jobs:
           body: |
             ## OneSync ${{ github.ref_name }}
 
-            本版本完善 OneDrive 双向同步管理体验，修复连接与传输状态显示问题。
+            本版本完善同步授权、企业微信通知和支持页面体验。
 
             ### 更新内容
-            - 修复同步控制接口因状态写入依赖缺失而返回 `500` 的问题
-            - 修复旧页面缓存导致的 `Failed to fetch`，兼容旧 Graph 状态接口
-            - 显示真实文件传输百分比、下载体积及上传下载速度
-            - 下载速度正确读取 OneDrive 的 `.partial` 临时文件
-            - 重新设计传输进度区域，移除变更记录页面
-            - 保留同步日志、Webhook 通知与 Unraid XML 部署支持
+            - “同步授权”改为弹窗显示 Microsoft 登录链接和设备代码
+            - 设备代码支持点击复制，并在授权成功后自动恢复持续同步
+            - 授权异常退出时显示明确错误，不再长期停留在等待状态
+            - 修复企业微信机器人 Webhook 的保存、脱敏回显与 Markdown 消息格式
+            - Webhook 发送失败不再导致后台通知任务退出
+            - 替换并优化微信、支付宝二维码，改善桌面与移动端扫码尺寸
+            - 修复主动停止同步时可能误报引擎故障的问题
+            - 更新 Unraid XML，默认部署 Docker Hub `waning/onesync:0.1.3`
 
             GitHub Release 仅包含版本说明，不上传软件包或附件。镜像请从 Docker Hub 获取。
           generate_release_notes: true

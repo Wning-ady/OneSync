@@ -101,3 +101,75 @@ async def test_download_metrics_read_partial_file(tmp_path) -> None:
     assert progress["activeDownload"] == "docs/archive.bin"  # type: ignore[index]
     assert progress["downloadBytes"] == 300  # type: ignore[index]
     assert progress["downloadSpeed"] > 0  # type: ignore[index]
+
+
+@pytest.mark.asyncio
+async def test_sync_authorization_details_are_exposed(tmp_path) -> None:
+    manager = SyncManager(tmp_path / "config", tmp_path / "data")
+    manager.mode = "reauth"
+
+    manager._append_log("Open https://login.microsoft.com/device, then continue.")
+    manager._append_log("Enter the following code when prompted: ABCD-EFGH")
+
+    authorization = manager.status()["authorization"]
+    assert authorization["state"] == "pending"  # type: ignore[index]
+    assert authorization["verificationUri"] == "https://login.microsoft.com/device"  # type: ignore[index]
+    assert authorization["userCode"] == "ABCD-EFGH"  # type: ignore[index]
+
+    manager._append_log("Access token acquired!")
+    assert manager.status()["authorization"]["state"] == "authorized"  # type: ignore[index]
+    assert manager.mode == "monitor"
+
+
+@pytest.mark.asyncio
+async def test_reauth_starts_monitor_after_device_authorization(monkeypatch, tmp_path) -> None:
+    manager = SyncManager(tmp_path / "config", tmp_path / "data")
+    command = []
+
+    class Process:
+        returncode = None
+
+    async def create_process(*args, **kwargs):
+        command.extend(args)
+        return Process()
+
+    async def consume_output(process):
+        return None
+
+    monkeypatch.setattr(asyncio, "create_subprocess_exec", create_process)
+    monkeypatch.setattr(manager, "_consume_output", consume_output)
+
+    await manager.reauth()
+    await manager._reader
+
+    assert "--reauth" in command
+    assert "--monitor" in command
+    assert manager.status()["authorization"]["state"] == "starting"  # type: ignore[index]
+
+
+@pytest.mark.asyncio
+async def test_reauth_process_exit_is_reported_as_failed(tmp_path) -> None:
+    manager = SyncManager(tmp_path / "config", tmp_path / "data")
+    manager.mode = "reauth"
+    manager.authorization_state = "pending"
+
+    class Output:
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            raise StopAsyncIteration
+
+    class Process:
+        stdout = Output()
+
+        async def wait(self):
+            return 1
+
+    process = Process()
+    manager.process = process  # type: ignore[assignment]
+    await manager._consume_output(process)  # type: ignore[arg-type]
+
+    authorization = manager.status()["authorization"]
+    assert authorization["state"] == "failed"  # type: ignore[index]
+    assert "租户" in authorization["message"]  # type: ignore[index]

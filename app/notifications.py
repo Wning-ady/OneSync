@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qs, urlparse
 
 import httpx
 
@@ -24,22 +24,45 @@ class NotificationManager:
     def public(self) -> dict[str, object]:
         value = self.load()
         endpoint = str(value.get("webhookUrl", ""))
-        return {"enabled": bool(value.get("enabled")), "configured": bool(endpoint), "endpointHost": urlparse(endpoint).netloc, "events": value.get("events", {"syncError": True, "graphDisconnected": True})}
+        return {
+            "enabled": bool(value.get("enabled")),
+            "configured": bool(endpoint),
+            "endpointHost": urlparse(endpoint).netloc,
+            "endpointPreview": self._mask_endpoint(endpoint),
+            "events": value.get(
+                "events",
+                {"syncError": True, "graphDisconnected": True},
+            ),
+        }
 
     def save(self, enabled: bool, webhook_url: str, events: dict[str, bool]) -> dict[str, object]:
         webhook_url = webhook_url.strip()
+        # The browser intentionally clears the secret input after saving. An empty
+        # value therefore means "keep the configured endpoint", not "erase it".
+        if not webhook_url:
+            webhook_url = str(self.load().get("webhookUrl", "")).strip()
         parsed = urlparse(webhook_url) if webhook_url else None
         if enabled and (not parsed or parsed.scheme not in {"http", "https"} or not parsed.netloc):
             raise NotificationError("启用通知时需要填写有效的 HTTP/HTTPS Webhook 地址。")
+        if webhook_url:
+            self._validate_endpoint(webhook_url)
         write_json_private(self.path, {"enabled": enabled, "webhookUrl": webhook_url, "events": {"syncError": bool(events.get("syncError", True)), "graphDisconnected": bool(events.get("graphDisconnected", True))}, "updatedAt": datetime.now(timezone.utc).isoformat()})
         return self.public()
 
-    async def send(self, event: str, severity: str, message: str, details: dict[str, object] | None = None) -> None:
+    async def send(
+        self,
+        event: str,
+        severity: str,
+        message: str,
+        details: dict[str, object] | None = None,
+        *,
+        force: bool = False,
+    ) -> None:
         value = self.load()
         endpoint = str(value.get("webhookUrl", ""))
-        if not endpoint or not value.get("enabled"):
+        if not endpoint or (not value.get("enabled") and not force):
             return
-        payload = {"title": "OneSync 通知", "event": event, "severity": severity, "time": datetime.now(timezone.utc).isoformat(), "message": message[:500], "source": "OneSync", "details": details or {}}
+        payload = self._payload(endpoint, event, severity, message, details or {})
         try:
             async with httpx.AsyncClient(timeout=10) as client:
                 response = await client.post(endpoint, json=payload)
@@ -47,15 +70,94 @@ class NotificationManager:
             raise NotificationError("Webhook 无法连接，请检查地址与网络。") from error
         if response.is_error:
             raise NotificationError(f"Webhook 返回 HTTP {response.status_code}。")
+        if self._is_wecom(endpoint):
+            try:
+                result = response.json()
+            except ValueError as error:
+                raise NotificationError("企业微信 Webhook 返回了无法识别的响应。") from error
+            if not isinstance(result, dict) or result.get("errcode") != 0:
+                reason = str(result.get("errmsg", "未知错误")) if isinstance(result, dict) else "未知错误"
+                raise NotificationError(f"企业微信 Webhook 发送失败：{reason}。")
 
     async def send_test(self) -> None:
         if not self.load().get("webhookUrl"):
             raise NotificationError("请先保存 Webhook 地址。")
-        was_enabled = bool(self.load().get("enabled"))
-        if not was_enabled:
-            value = self.load(); value["enabled"] = True; write_json_private(self.path, value)
-        try:
-            await self.send("test", "info", "Webhook 已连接。后续同步错误或 Graph 掉线会通知此地址。")
-        finally:
-            if not was_enabled:
-                value = self.load(); value["enabled"] = False; write_json_private(self.path, value)
+        await self.send(
+            "test",
+            "info",
+            "Webhook 已连接。后续同步错误或 Graph 掉线会通知此地址。",
+            force=True,
+        )
+
+    @staticmethod
+    def _is_wecom(endpoint: str) -> bool:
+        parsed = urlparse(endpoint)
+        return parsed.hostname == "qyapi.weixin.qq.com" and parsed.path == "/cgi-bin/webhook/send"
+
+    @classmethod
+    def _validate_endpoint(cls, endpoint: str) -> None:
+        parsed = urlparse(endpoint)
+        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+            raise NotificationError("Webhook 地址必须使用有效的 HTTP/HTTPS URL。")
+        if parsed.hostname == "qyapi.weixin.qq.com":
+            key = parse_qs(parsed.query).get("key", [""])[0].strip()
+            if parsed.scheme != "https" or parsed.path != "/cgi-bin/webhook/send" or not key:
+                raise NotificationError("企业微信机器人地址格式不正确，请粘贴包含 key 的完整 Webhook 地址。")
+
+    @staticmethod
+    def _mask_endpoint(endpoint: str) -> str:
+        if not endpoint:
+            return ""
+        parsed = urlparse(endpoint)
+        if parsed.hostname == "qyapi.weixin.qq.com":
+            key = parse_qs(parsed.query).get("key", [""])[0]
+            if key:
+                masked_key = f"{key[:8]}...{key[-4:]}" if len(key) > 12 else "****"
+                return f"{parsed.scheme}://{parsed.netloc}{parsed.path}?key={masked_key}"
+        return f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+
+    @classmethod
+    def _payload(
+        cls,
+        endpoint: str,
+        event: str,
+        severity: str,
+        message: str,
+        details: dict[str, object],
+    ) -> dict[str, object]:
+        occurred_at = datetime.now(timezone.utc).isoformat()
+        if cls._is_wecom(endpoint):
+            event_name = {
+                "test": "测试通知",
+                "sync_error": "同步异常",
+                "graph_disconnected": "Graph 连接断开",
+            }.get(event, event)
+            severity_name = {
+                "info": "信息",
+                "warning": "警告",
+                "error": "错误",
+            }.get(severity, severity)
+            content = [
+                "## OneSync 通知",
+                f"> 事件：{event_name}",
+                f"> 级别：{severity_name}",
+                f"> 时间：{occurred_at}",
+                "",
+                str(message)[:500],
+            ]
+            path = str(details.get("path", "")).strip()
+            action = str(details.get("action", "")).strip()
+            if path:
+                content.append(f"\n文件：{path[:500]}")
+            if action:
+                content.append(f"\n操作：{action[:200]}")
+            return {"msgtype": "markdown", "markdown": {"content": "\n".join(content)}}
+        return {
+            "title": "OneSync 通知",
+            "event": event,
+            "severity": severity,
+            "time": occurred_at,
+            "message": str(message)[:500],
+            "source": "OneSync",
+            "details": details,
+        }

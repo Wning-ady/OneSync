@@ -40,6 +40,11 @@ class SyncManager:
     upload_bytes: int = 0
     _download_sample: tuple[float, int] | None = None
     _upload_sample: tuple[float, int] | None = None
+    authorization_state: str = "idle"
+    authorization_uri: str = ""
+    authorization_code: str = ""
+    authorization_message: str = ""
+    _stopping: bool = False
 
     def _event_path(self) -> Path:
         return self.config_dir / "change-events.jsonl"
@@ -68,6 +73,23 @@ class SyncManager:
 
     def _append_log(self, line: str) -> None:
         self.logs.append(line)
+        login_url = re.search(
+            r"https://login\.microsoft(?:online)?\.com/[^\s<>\"']+",
+            line,
+            re.IGNORECASE,
+        )
+        if login_url:
+            self.authorization_uri = login_url.group(0).rstrip(".,;)")
+        code = re.search(r"Enter the following code when prompted:\s*([A-Z0-9-]+)", line)
+        if code:
+            self.authorization_code = code.group(1)
+            self.authorization_state = "pending"
+            self.authorization_message = "请打开 Microsoft 登录页并输入设备代码。"
+        elif "Access token acquired!" in line:
+            self.authorization_state = "authorized"
+            self.authorization_message = "同步授权成功，持续同步正在启动。"
+            if self.mode == "reauth":
+                self.mode = "monitor"
         download = re.search(r"^Downloading file: (.+?) \.\.\. (done|failed!)$", line)
         upload = re.search(r"^Uploading (?:new |modified )?file: (.+?) \.\.\. (done|failed!)$", line)
         progress = re.search(r"^(Downloading|Uploading): (.+?) \.\.\. (\d+)%", line)
@@ -144,7 +166,12 @@ class SyncManager:
             self._append_log(line.decode(errors="replace").rstrip())
         result = await process.wait()
         self._append_log(f"OneDrive process exited with code {result}.")
-        if result:
+        if self.mode == "reauth" and self.authorization_state != "authorized":
+            self.authorization_state = "failed"
+            self.authorization_message = (
+                "同步授权进程已退出，请检查租户、应用注册或网络后重试。"
+            )
+        if result and not self._stopping:
             self._record("system", "engine_exit", status="failed", detail=f"OneDrive exited with code {result}")
         if self.process is process:
             self.process = None
@@ -177,12 +204,21 @@ class SyncManager:
             self.mode = "stopped"
             return
         self.logs.append("Stopping OneDrive process.")
+        self._stopping = True
         process.terminate()
         try:
             await asyncio.wait_for(process.wait(), timeout=20)
         except TimeoutError:
             process.kill()
             await process.wait()
+        finally:
+            reader = self._reader
+            if reader and reader is not asyncio.current_task() and not reader.done():
+                try:
+                    await asyncio.wait_for(asyncio.shield(reader), timeout=5)
+                except TimeoutError:
+                    reader.cancel()
+            self._stopping = False
         if self.process is process:
             self.process = None
         self.mode = "stopped"
@@ -274,9 +310,13 @@ class SyncManager:
     async def reauth(self) -> None:
         await self.cancel_and_stop()
         async with self._lock:
+            self.authorization_state = "starting"
+            self.authorization_uri = ""
+            self.authorization_code = ""
+            self.authorization_message = "正在向 Microsoft 申请设备代码。"
             self.logs.append("Starting OneDrive reauthorization. Complete the device-code prompt below.")
             self.process = await asyncio.create_subprocess_exec(
-                *self._command("--reauth"),
+                *self._command("--reauth", "--monitor"),
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.STDOUT,
                 env={**os.environ, "HOME": str(self.config_dir)},
@@ -290,6 +330,12 @@ class SyncManager:
             "running": bool(self.process and self.process.returncode is None),
             "dataDirectory": str(self.data_dir),
             "configDirectory": str(self.config_dir),
+            "authorization": {
+                "state": self.authorization_state,
+                "verificationUri": self.authorization_uri,
+                "userCode": self.authorization_code,
+                "message": self.authorization_message,
+            },
             "operation": {
                 "phase": self.operation_phase,
                 "message": self.operation_message,

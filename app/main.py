@@ -66,12 +66,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 events = list(sync.events)
                 for event in events[last_event:]:
                     if event.get("status") in {"failed", "warning"}:
-                        await notifications.send("sync_error", "warning" if event.get("status") == "warning" else "error", str(event.get("detail") or event.get("action")), {"path": event.get("path", ""), "action": event.get("action", "")})
+                        try:
+                            await notifications.send("sync_error", "warning" if event.get("status") == "warning" else "error", str(event.get("detail") or event.get("action")), {"path": event.get("path", ""), "action": event.get("action", "")})
+                        except NotificationError as error:
+                            sync.logs.append(f"Webhook notification failed: {error}")
                 last_event = len(events)
                 status = await graph.check_connection(force=True)
                 connected = bool(status.get("verified"))
                 if graph_was_connected and not connected:
-                    await notifications.send("graph_disconnected", "error", str(status.get("message") or "Microsoft Graph 已断开。"))
+                    try:
+                        await notifications.send("graph_disconnected", "error", str(status.get("message") or "Microsoft Graph 已断开。"))
+                    except NotificationError as error:
+                        sync.logs.append(f"Webhook notification failed: {error}")
                 graph_was_connected = connected
         watcher = asyncio.create_task(notification_watch())
         yield
@@ -195,6 +201,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.post("/api/sync/reauth")
     async def reauth() -> dict[str, object]:
         await sync.reauth()
+        write_json_private(settings.config_dir / "manager-state.json", {"monitor_enabled": True})
         return sync.status()
 
     @app.post("/api/sync/resync", status_code=202)
