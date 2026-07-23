@@ -18,7 +18,6 @@ from .graph import GraphClient, GraphError
 from .notifications import NotificationError, NotificationManager
 from .selection import SelectionStore
 from .settings import Settings
-from .storage import read_json, write_json_private
 from .sync import SyncManager
 
 
@@ -38,10 +37,6 @@ class NotificationRequest(BaseModel):
     enabled: bool = False
     webhook_url: str = ""
     events: dict[str, bool] = Field(default_factory=dict)
-
-
-class HistorySettingsRequest(BaseModel):
-    retention_days: int = Field(ge=1, le=3650)
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -168,22 +163,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             key = "download" if event.get("direction") == "cloud_to_local" and event.get("action") == "download" else "upload" if event.get("direction") == "local_to_cloud" and event.get("action") == "upload" else None
             if key: totals[key]["files"] += 1; totals[key]["bytes"] += int(event.get("size") or 0)
         return {"range": label, "start": start.isoformat(), "end": end.isoformat(), **totals}
-
-    @app.get("/api/transfers/settings")
-    async def transfer_settings() -> dict[str, int]:
-        value = read_json(settings.config_dir / "transfer-settings.json", {"retentionDays": 90})
-        return {"retentionDays": int(value.get("retentionDays", 90)) if isinstance(value, dict) else 90}
-
-    @app.put("/api/transfers/settings")
-    async def save_transfer_settings(request: HistorySettingsRequest) -> dict[str, int]:
-        write_json_private(settings.config_dir / "transfer-settings.json", {"retentionDays": request.retention_days})
-        cutoff = datetime.now(timezone.utc) - timedelta(days=request.retention_days); path = settings.config_dir / "change-events.jsonl"; kept = []
-        for event in read_transfer_events():
-            try:
-                if datetime.fromisoformat(str(event.get("time"))) >= cutoff: kept.append(event)
-            except ValueError: pass
-        if path.exists(): path.write_text("".join(json.dumps(event, ensure_ascii=False) + "\n" for event in kept), encoding="utf-8")
-        return {"retentionDays": request.retention_days}
 
     @app.get("/api/notifications")
     async def notification_settings() -> dict[str, object]:
