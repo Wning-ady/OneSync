@@ -40,7 +40,8 @@ ARG APP_VERSION=0.1.4
 USER root
 RUN apt-get update \
     && apt-get install -y --no-install-recommends python3 util-linux \
-    && rm -rf /var/lib/apt/lists/*
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /usr/local/bin/gosu
 
 WORKDIR /app
 COPY --from=python-runtime /opt/onesync /opt/onesync
