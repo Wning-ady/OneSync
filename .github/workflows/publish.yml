@@ -203,6 +203,35 @@ jobs:
             "$COSIGN_IMAGE" \
             sign --yes "$IMAGE_REFERENCE@$IMAGE_DIGEST"
 
+      - name: Update Docker Hub description
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          login_payload=$(jq -n \
+            --arg username "$DOCKERHUB_USERNAME" \
+            --arg password "$DOCKERHUB_TOKEN" \
+            '{username:$username,password:$password}')
+          hub_jwt=$(curl --fail-with-body --silent --show-error \
+            --request POST \
+            --header 'Content-Type: application/json' \
+            --data "$login_payload" \
+            https://hub.docker.com/v2/users/login/ | jq -r .token)
+          test -n "$hub_jwt"
+          description_payload=$(jq -n \
+            --arg description '安全、可控的 Unraid OneDrive 选择性双向同步管理器' \
+            --rawfile full_description docs/DOCKERHUB.md \
+            '{description:$description,full_description:$full_description}')
+          curl --fail-with-body --silent --show-error \
+            --request PATCH \
+            --header "Authorization: JWT $hub_jwt" \
+            --header 'Content-Type: application/json' \
+            --data "$description_payload" \
+            --output /dev/null \
+            "https://hub.docker.com/v2/repositories/$DOCKERHUB_USERNAME/onesync/"
+          unset hub_jwt login_payload description_payload
+
   release:
     name: Create GitHub release
     if: startsWith(github.ref, 'refs/tags/v')
