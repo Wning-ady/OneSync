@@ -19,12 +19,20 @@ OneSync runs the maintained [`abraunegg/onedrive`](https://github.com/abraunegg/
 
 ## Deploy
 
-Use Unraid Compose Manager:
+Create a `.env` file in the Unraid Compose Manager project directory. Generate the admin token with `openssl rand -hex 24`; it must contain at least 16 characters. Never commit `.env`, the token, or `docker compose config` output.
+
+```dotenv
+ONESYNC_BIND_ADDRESS=192.168.2.21
+ONESYNC_ADMIN_TOKEN=replace-with-a-random-value-of-at-least-16-characters
+ONESYNC_ALLOWED_HOSTS=192.168.2.21,127.0.0.1,localhost
+```
+
+Then use:
 
 ```yaml
 services:
   onesync:
-    image: ghcr.io/Wning-ady/onesync:latest
+    image: ${ONESYNC_IMAGE:-docker.io/waning/onesync:latest}
     container_name: onesync
     environment:
       PUID: "99"
@@ -32,14 +40,23 @@ services:
       TZ: Asia/Shanghai
       GRAPH_CLIENT_ID: replace-with-your-entra-client-id
       GRAPH_TENANT_ID: 5dldn8.onmicrosoft.com
-    ports: ["8098:8098"]
+      ONESYNC_ADMIN_TOKEN: ${ONESYNC_ADMIN_TOKEN:?Set a random admin token of at least 16 characters in .env}
+      ONESYNC_ALLOWED_HOSTS: ${ONESYNC_ALLOWED_HOSTS:-192.168.2.21,127.0.0.1,localhost}
+    ports:
+      - "${ONESYNC_BIND_ADDRESS:-192.168.2.21}:8098:8098"
     volumes:
       - /mnt/user/appdata/onesync:/onedrive/conf
       - /mnt/user/onedrive:/onedrive/data
     restart: unless-stopped
 ```
 
-Open `http://<unraid-ip>:8098` only on a trusted LAN, VPN, or protected reverse proxy.
+Open `http://192.168.2.21:8098` and enter `ONESYNC_ADMIN_TOKEN`. The browser session is stored in an HttpOnly, SameSite cookie and must be established again after a container restart. The default port mapping listens only on the configured LAN address, not `0.0.0.0`; non-LAN Tailscale sources remain blocked.
+
+For DockerMan, import `unraid/onesync.xml`, enter an admin token of at least 16 characters, and do not add a second Port entry for `8098`. The XML uses `ExtraParams` to bind `192.168.2.21:8098`. If the Unraid address differs, update that binding and `ONESYNC_ALLOWED_HOSTS` together. Keep a `DOCKER-USER` firewall rule that allows only the management LAN and rejects WAN, non-LAN Tailscale sources, and IPv6.
+
+### Deployment rollback
+
+Before an upgrade, back up `/mnt/user/appdata/onesync`, `/mnt/user/onedrive`, and the current XML or Compose files. For Compose, set `ONESYNC_IMAGE` in `.env` to the previous known-good version and run `docker compose up -d`. For DockerMan, restore the backed-up template or temporarily recreate with the previous image tag. Preserve the admin token, host allowlist, LAN-only binding, firewall policy, and both persistent directories during rollback.
 
 ## Microsoft Entra setup
 

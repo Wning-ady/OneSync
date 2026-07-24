@@ -79,7 +79,23 @@ def test_blank_url_keeps_existing_webhook(tmp_path) -> None:
 def test_rejects_invalid_wecom_endpoint(tmp_path, endpoint: str) -> None:
     manager = NotificationManager(tmp_path / "notifications.json")
 
-    with pytest.raises(NotificationError, match="企业微信机器人地址格式不正确"):
+    with pytest.raises(NotificationError, match="仅允许使用"):
+        manager.save(True, endpoint, {})
+
+
+@pytest.mark.parametrize(
+    "endpoint",
+    [
+        "https://example.com/webhook",
+        "https://127.0.0.1/cgi-bin/webhook/send?key=11111111-2222-3333-4444-555555555555",
+        WECOM_URL + "&next=http://127.0.0.1",
+        "https://user:password@qyapi.weixin.qq.com/cgi-bin/webhook/send?key=11111111-2222-3333-4444-555555555555",
+    ],
+)
+def test_rejects_non_allowlisted_endpoint(tmp_path, endpoint: str) -> None:
+    manager = NotificationManager(tmp_path / "notifications.json")
+
+    with pytest.raises(NotificationError, match="仅允许使用"):
         manager.save(True, endpoint, {})
 
 
@@ -91,7 +107,11 @@ async def test_wecom_test_message_uses_markdown_and_does_not_enable_notification
     manager.save(False, WECOM_URL, {})
     requests: list[tuple[str, dict[str, object]]] = []
     fake_client = FakeClient(FakeResponse({"errcode": 0, "errmsg": "ok"}), requests)
-    monkeypatch.setattr("app.notifications.httpx.AsyncClient", lambda timeout: fake_client)
+    async def public_resolution(_: str) -> None:
+        return None
+
+    monkeypatch.setattr(manager, "_assert_public_resolution", public_resolution)
+    monkeypatch.setattr("app.notifications.httpx.AsyncClient", lambda **_: fake_client)
 
     await manager.send_test()
 
@@ -110,7 +130,40 @@ async def test_wecom_api_error_is_reported(tmp_path, monkeypatch) -> None:
     fake_client = FakeClient(
         FakeResponse({"errcode": 93000, "errmsg": "invalid webhook url"}), []
     )
-    monkeypatch.setattr("app.notifications.httpx.AsyncClient", lambda timeout: fake_client)
+    async def public_resolution(_: str) -> None:
+        return None
+
+    monkeypatch.setattr(manager, "_assert_public_resolution", public_resolution)
+    monkeypatch.setattr("app.notifications.httpx.AsyncClient", lambda **_: fake_client)
 
     with pytest.raises(NotificationError, match="invalid webhook url"):
+        await manager.send_test()
+
+
+@pytest.mark.asyncio
+async def test_rejects_private_dns_resolution(tmp_path, monkeypatch) -> None:
+    manager = NotificationManager(tmp_path / "notifications.json")
+    manager.save(True, WECOM_URL, {})
+    monkeypatch.setattr(
+        "app.notifications.socket.getaddrinfo",
+        lambda *_args, **_kwargs: [(2, 1, 6, "", ("127.0.0.1", 443))],
+    )
+
+    with pytest.raises(NotificationError, match="私网、回环、链路本地或保留地址"):
+        await manager.send_test()
+
+
+@pytest.mark.asyncio
+async def test_rejects_webhook_redirect(tmp_path, monkeypatch) -> None:
+    manager = NotificationManager(tmp_path / "notifications.json")
+    manager.save(True, WECOM_URL, {})
+    fake_client = FakeClient(FakeResponse({}, status_code=302), [])
+
+    async def public_resolution(_: str) -> None:
+        return None
+
+    monkeypatch.setattr(manager, "_assert_public_resolution", public_resolution)
+    monkeypatch.setattr("app.notifications.httpx.AsyncClient", lambda **_: fake_client)
+
+    with pytest.raises(NotificationError, match="不允许的重定向"):
         await manager.send_test()

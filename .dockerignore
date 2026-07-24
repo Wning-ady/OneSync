@@ -1,6 +1,10 @@
-.git
-.github
-.pytest_cache
-__pycache__
-tests
-README.md
+**
+!app
+!app/**
+!docker
+!docker/entrypoint.sh
+!Dockerfile
+!requirements.lock
+!requirements-dev.lock
+!tests
+!tests/**
