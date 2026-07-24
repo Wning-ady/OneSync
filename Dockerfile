@@ -39,7 +39,7 @@ ARG APP_VERSION=0.1.4
 
 USER root
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends gosu python3 \
+    && apt-get install -y --no-install-recommends python3 util-linux \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
