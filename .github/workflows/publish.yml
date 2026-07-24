@@ -1,70 +1,237 @@
-name: Publish OneSync and release
+name: Security, publish, and release
 
 on:
+  pull_request:
   push:
     branches: [main]
     tags: ["v*"]
   workflow_dispatch:
+    inputs:
+      publish:
+        description: Publish the verified image to Docker Hub
+        required: false
+        type: boolean
+        default: false
 
 permissions:
-  contents: write
+  contents: read
+
+concurrency:
+  group: onesync-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
+env:
+  GITLEAKS_IMAGE: zricethezav/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f
+  HADOLINT_IMAGE: hadolint/hadolint@sha256:7aba693c1442eb31c0b015c129697cb3b6cb7da589d85c7562f9deb435a6657c
+  TRIVY_IMAGE: aquasec/trivy@sha256:cffe3f5161a47a6823fbd23d985795b3ed72a4c806da4c4df16266c02accdd6f
+  SEMGREP_IMAGE: semgrep/semgrep@sha256:bdf7013b2c3634a487671158da77c554f531742326b543a9464d2adf6c433ac8
+  COSIGN_IMAGE: gcr.io/projectsigstore/cosign@sha256:d91bc4e7e95e8d2f549c747a72dc174f90579e410a1695f57f686674f84ce849
 
 jobs:
-  publish-dockerhub:
-    runs-on: ubuntu-latest
+  security:
+    name: Supply-chain security gates
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
     steps:
-      - uses: actions/checkout@v4
-      - uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - uses: docker/metadata-action@v5
-        id: meta
-        with:
-          images: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/onesync
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=semver,pattern={{version}}
-            type=sha
-      - name: Resolve application version
-        id: version
-        shell: bash
+      - name: Check out the exact revision
+        env:
+          REPOSITORY_TOKEN: ${{ github.token }}
         run: |
-          if [[ "${GITHUB_REF_TYPE}" == "tag" ]]; then
+          set -euo pipefail
+          git init "$GITHUB_WORKSPACE"
+          cd "$GITHUB_WORKSPACE"
+          git remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0=http.extraheader
+          basic_auth=$(printf 'x-access-token:%s' "$REPOSITORY_TOKEN" | base64 -w 0)
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $basic_auth"
+          git fetch --no-tags --depth=1 origin "$GITHUB_SHA"
+          unset basic_auth GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 REPOSITORY_TOKEN
+          git checkout --detach FETCH_HEAD
+
+      - name: Scan repository for secrets
+        run: |
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/repo:ro" \
+            --workdir /repo \
+            "$GITLEAKS_IMAGE" \
+            detect --source . --no-banner --redact --exit-code 1
+
+      - name: Lint Dockerfile
+        run: |
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/repo:ro" \
+            --workdir /repo \
+            "$HADOLINT_IMAGE" \
+            --failure-threshold error Dockerfile
+
+      - name: Scan source and locked dependencies
+        run: |
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/repo:ro" \
+            "$TRIVY_IMAGE" \
+            fs --scanners vuln,secret,misconfig \
+            --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            /repo
+
+      - name: Run Semgrep security rules
+        run: |
+          docker run --rm \
+            --volume "$GITHUB_WORKSPACE:/src:ro" \
+            --workdir /src \
+            "$SEMGREP_IMAGE" \
+            scan --config p/python --config p/secrets \
+            --severity ERROR --metrics off --error .
+
+      - name: Run tests in the locked production base
+        run: docker build --target test --tag onesync:test .
+
+  publish-dockerhub:
+    name: Build, verify, attest, and publish
+    if: github.event_name != 'pull_request' && (github.event_name != 'workflow_dispatch' || inputs.publish)
+    needs: security
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Check out the exact revision
+        env:
+          REPOSITORY_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git init "$GITHUB_WORKSPACE"
+          cd "$GITHUB_WORKSPACE"
+          git remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0=http.extraheader
+          basic_auth=$(printf 'x-access-token:%s' "$REPOSITORY_TOKEN" | base64 -w 0)
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $basic_auth"
+          git fetch --no-tags --depth=1 origin "$GITHUB_SHA"
+          unset basic_auth GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 REPOSITORY_TOKEN
+          git checkout --detach FETCH_HEAD
+
+      - name: Log in to Docker Hub
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          printf '%s' "$DOCKERHUB_TOKEN" | docker login docker.io \
+            --username "$DOCKERHUB_USERNAME" --password-stdin
+
+      - name: Create Buildx builder
+        run: docker buildx create --name onesync-builder --driver docker-container --use
+
+      - name: Build local audit image
+        run: |
+          docker buildx build \
+            --load \
+            --platform linux/amd64 \
+            --tag onesync:security-audit \
+            .
+
+      - name: Block fixable high and critical image vulnerabilities
+        run: |
+          docker run --rm \
+            --volume /var/run/docker.sock:/var/run/docker.sock \
+            "$TRIVY_IMAGE" \
+            image --severity HIGH,CRITICAL \
+            --ignore-unfixed \
+            --exit-code 1 \
+            onesync:security-audit
+
+      - name: Resolve immutable image tags
+        id: image
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+        run: |
+          set -euo pipefail
+          image="docker.io/${DOCKERHUB_USERNAME}/onesync"
+          version=""
+          if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             version="${GITHUB_REF_NAME#v}"
-          else
-            version="$(sed -n 's/^ARG APP_VERSION=//p' Dockerfile)"
           fi
-          echo "value=${version}" >> "$GITHUB_OUTPUT"
-      - uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: APP_VERSION=${{ steps.version.outputs.value }}
+          echo "reference=$image" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Push image with SBOM and provenance
+        id: push
+        env:
+          IMAGE_REFERENCE: ${{ steps.image.outputs.reference }}
+          RELEASE_VERSION: ${{ steps.image.outputs.version }}
+        run: |
+          set -euo pipefail
+          tag_args=(
+            --tag "$IMAGE_REFERENCE:latest"
+            --tag "$IMAGE_REFERENCE:sha-${GITHUB_SHA:0:12}"
+          )
+          build_args=()
+          if [[ -n "$RELEASE_VERSION" ]]; then
+            tag_args+=(--tag "$IMAGE_REFERENCE:$RELEASE_VERSION")
+            build_args+=(--build-arg "APP_VERSION=$RELEASE_VERSION")
+          fi
+          docker buildx build \
+            --platform linux/amd64 \
+            --push \
+            --provenance=mode=max \
+            --sbom=true \
+            --metadata-file build-metadata.json \
+            "${build_args[@]}" \
+            "${tag_args[@]}" \
+            .
+          digest=$(python3 -c 'import json; print(json.load(open("build-metadata.json"))["containerimage.digest"])')
+          echo "digest=$digest" >> "$GITHUB_OUTPUT"
+
+      - name: Keyless-sign the published digest
+        env:
+          IMAGE_REFERENCE: ${{ steps.image.outputs.reference }}
+          IMAGE_DIGEST: ${{ steps.push.outputs.digest }}
+        run: |
+          docker run --rm \
+            --env ACTIONS_ID_TOKEN_REQUEST_TOKEN \
+            --env ACTIONS_ID_TOKEN_REQUEST_URL \
+            --env COSIGN_EXPERIMENTAL=1 \
+            --volume "$HOME/.docker:/root/.docker:ro" \
+            "$COSIGN_IMAGE" \
+            sign --yes "$IMAGE_REFERENCE@$IMAGE_DIGEST"
 
   release:
+    name: Create GitHub release
     if: startsWith(github.ref, 'refs/tags/v')
-    runs-on: ubuntu-latest
+    needs: publish-dockerhub
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
     steps:
-      - uses: softprops/action-gh-release@v2
-        with:
-          name: OneSync ${{ github.ref_name }}
-          body: |
-            ## OneSync ${{ github.ref_name }}
+      - name: Check out release notes
+        env:
+          REPOSITORY_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git init "$GITHUB_WORKSPACE"
+          cd "$GITHUB_WORKSPACE"
+          git remote add origin "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY.git"
+          export GIT_CONFIG_COUNT=1
+          export GIT_CONFIG_KEY_0=http.extraheader
+          basic_auth=$(printf 'x-access-token:%s' "$REPOSITORY_TOKEN" | base64 -w 0)
+          export GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $basic_auth"
+          git fetch --no-tags --depth=1 origin "$GITHUB_SHA"
+          unset basic_auth GIT_CONFIG_COUNT GIT_CONFIG_KEY_0 GIT_CONFIG_VALUE_0 REPOSITORY_TOKEN
+          git checkout --detach FETCH_HEAD
 
-            本版本完善同步授权、企业微信通知和支持页面体验。
-
-            ### 更新内容
-            - “同步授权”改为弹窗显示 Microsoft 登录链接和设备代码
-            - 设备代码支持点击复制，并在授权成功后自动恢复持续同步
-            - 授权异常退出时显示明确错误，不再长期停留在等待状态
-            - 修复企业微信机器人 Webhook 的保存、脱敏回显与 Markdown 消息格式
-            - Webhook 发送失败不再导致后台通知任务退出
-            - 替换并优化微信、支付宝二维码，改善桌面与移动端扫码尺寸
-            - 修复主动停止同步时可能误报引擎故障的问题
-            - 更新 Unraid XML，默认部署 Docker Hub `waning/onesync:0.1.3`
-
-            GitHub Release 仅包含版本说明，不上传软件包或附件。镜像请从 Docker Hub 获取。
-          generate_release_notes: true
+      - name: Create release notes without binary assets
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          notes="docs/releases/${GITHUB_REF_NAME}.md"
+          test -f "$notes"
+          gh release create "$GITHUB_REF_NAME" \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "OneSync $GITHUB_REF_NAME" \
+            --notes-file "$notes"

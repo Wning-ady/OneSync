@@ -1,6 +1,6 @@
 services:
   onesync:
-    image: docker.io/waning/onesync:latest
+    image: ${ONESYNC_IMAGE:-docker.io/waning/onesync:latest}
     container_name: onesync
     environment:
       PUID: "99"
@@ -8,8 +8,10 @@ services:
       TZ: Asia/Shanghai
       GRAPH_CLIENT_ID: replace-with-your-entra-client-id
       GRAPH_TENANT_ID: 5dldn8.onmicrosoft.com
+      ONESYNC_ADMIN_TOKEN: ${ONESYNC_ADMIN_TOKEN:?Set ONESYNC_ADMIN_TOKEN to a random value of at least 16 characters}
+      ONESYNC_ALLOWED_HOSTS: ${ONESYNC_ALLOWED_HOSTS:-192.168.2.21,127.0.0.1,localhost}
     ports:
-      - "8098:8098"
+      - "${ONESYNC_BIND_ADDRESS:-192.168.2.21}:8098:8098"
     volumes:
       - /mnt/user/appdata/onesync:/onedrive/conf
       - /mnt/user/onedrive:/onedrive/data
