@@ -82,6 +82,7 @@ jobs:
           docker run --rm \
             --volume "$GITHUB_WORKSPACE:/src:ro" \
             --workdir /src \
+            --entrypoint semgrep \
             "$SEMGREP_IMAGE" \
             scan --config p/python --config p/secrets \
             --severity ERROR --metrics off --error .
