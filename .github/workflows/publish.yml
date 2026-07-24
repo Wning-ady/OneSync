@@ -197,6 +197,7 @@ jobs:
             --env ACTIONS_ID_TOKEN_REQUEST_TOKEN \
             --env ACTIONS_ID_TOKEN_REQUEST_URL \
             --env COSIGN_EXPERIMENTAL=1 \
+            --env DOCKER_CONFIG=/root/.docker \
             --volume "$HOME/.docker:/root/.docker:ro" \
             "$COSIGN_IMAGE" \
             sign --yes "$IMAGE_REFERENCE@$IMAGE_DIGEST"
