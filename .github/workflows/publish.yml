@@ -73,6 +73,7 @@ jobs:
             fs --scanners vuln,secret,misconfig \
             --severity HIGH,CRITICAL \
             --ignore-unfixed \
+            --ignorefile /repo/.trivyignore \
             --exit-code 1 \
             /repo
 
