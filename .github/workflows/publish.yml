@@ -63,7 +63,7 @@ jobs:
             --volume "$GITHUB_WORKSPACE:/repo:ro" \
             --workdir /repo \
             "$HADOLINT_IMAGE" \
-            --failure-threshold error Dockerfile
+            hadolint --failure-threshold error Dockerfile
 
       - name: Scan source and locked dependencies
         run: |
