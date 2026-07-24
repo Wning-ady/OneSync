@@ -14,7 +14,7 @@
     button,input { font:inherit; } button { min-height:38px; padding:8px 12px; color:var(--ink); background:#fff; border:1px solid #bfcac6; border-radius:6px; cursor:pointer; touch-action:manipulation; transition:background-color .15s ease,border-color .15s ease,color .15s ease,opacity .15s ease; } button:hover:not(:disabled) { background:#edf5f2; border-color:#7da493; } button:focus-visible,input:focus-visible,a:focus-visible { outline:3px solid rgba(0,127,99,.27); outline-offset:2px; } button:disabled { opacity:.45; cursor:not-allowed; } button.primary { color:#fff; background:var(--brand); border-color:var(--brand); } button.primary:hover:not(:disabled) { background:var(--brand-deep); border-color:var(--brand-deep); } button.danger { color:var(--bad); border-color:#e0aaa5; }
     .skip-link { position:fixed; z-index:50; top:8px; left:8px; padding:8px 12px; color:#fff; background:var(--brand); border-radius:6px; transform:translateY(-140%); transition:transform .15s ease; } .skip-link:focus-visible { transform:translateY(0); }
     .topbar { position:sticky; top:0; z-index:20; background:var(--night); border-bottom:1px solid #263530; } .topbar-inner { width:min(1380px,calc(100% - 48px)); min-height:68px; margin:0 auto; display:flex; align-items:center; gap:24px; } .brand { display:flex; align-items:center; gap:10px; margin-right:12px; white-space:nowrap; } .brand img { width:34px; height:34px; object-fit:cover; border-radius:8px; } .brand h1 { margin:0; color:#fff; font-size:20px; font-weight:720; } .brand span { color:#9dafaa; font-size:12px; } .main-nav { display:flex; align-self:stretch; gap:4px; } .main-nav button { min-height:auto; padding:0 12px; color:#aec0b9; background:transparent; border:0; border-bottom:2px solid transparent; border-radius:0; } .main-nav button:hover:not(:disabled),.main-nav button.active { color:#fff; background:transparent; border-bottom-color:#60d2b1; }
-    .top-statuses { display:flex; align-items:center; gap:8px; margin-left:auto; } .status-item { display:inline-flex; align-items:center; gap:7px; color:var(--muted); font-size:13px; white-space:nowrap; } .top-statuses .status-item { padding:6px 9px; color:#d9e4df; background:#22312d; border:1px solid #30433d; border-radius:5px; } .dot { width:8px; height:8px; border-radius:50%; background:#98a6a1; } .dot.ok { background:#42cf91; } .dot.busy { background:#77c5ff; } .dot.warn { background:#f1b84a; } .dot.bad { background:#ff7f78; } .refresh-time { min-width:54px; color:#9dafaa; font-variant-numeric:tabular-nums; font-size:12px; text-align:right; }
+    .top-statuses { display:flex; align-items:center; gap:8px; margin-left:auto; } .status-item { display:inline-flex; align-items:center; gap:7px; color:var(--muted); font-size:13px; white-space:nowrap; } .top-statuses .status-item { padding:6px 9px; color:#d9e4df; background:#22312d; border:1px solid #30433d; border-radius:5px; } .topbar-action { min-height:32px; padding:5px 9px; color:#d9e4df; background:#22312d; border-color:#40534d; } .topbar-action:hover:not(:disabled) { color:#fff; background:#30433d; border-color:#60766e; } .dot { width:8px; height:8px; border-radius:50%; background:#98a6a1; } .dot.ok { background:#42cf91; } .dot.busy { background:#77c5ff; } .dot.warn { background:#f1b84a; } .dot.bad { background:#ff7f78; } .refresh-time { min-width:54px; color:#9dafaa; font-variant-numeric:tabular-nums; font-size:12px; text-align:right; }
     .global-alert { display:none; padding:11px max(24px,calc((100% - 1380px)/2)); color:#84241d; background:#fff0ee; border-bottom:1px solid #f0c7c2; } .global-alert.show { display:block; } main { width:min(1380px,calc(100% - 48px)); margin:28px auto 52px; } .view[hidden] { display:none; }
     .workspace { display:grid; grid-template-columns:minmax(0,1fr) 360px; align-items:start; gap:22px; } .side { display:grid; gap:18px; } .panel { min-width:0; background:var(--paper); border:1px solid var(--line); border-radius:var(--radius); box-shadow:0 1px 1px rgba(18,36,31,.03); overflow:hidden; } .panel-head { min-height:58px; padding:12px 16px; display:flex; align-items:center; gap:12px; background:#fff; border-bottom:1px solid var(--line); } .panel-head h2 { margin:0; font-size:15px; font-weight:720; } .panel-head .sub { color:var(--muted); font-size:12px; } .panel-head .actions { margin-left:auto; display:flex; gap:8px; } .panel-body { padding:16px; }
     .folder-panel { min-height:548px; } .folder-toolbar { min-height:50px; padding:8px 16px; display:flex; align-items:center; gap:10px; background:var(--soft); border-bottom:1px solid var(--line); } .selection-meta { color:var(--muted); margin-right:auto; font-variant-numeric:tabular-nums; } .dirty { color:var(--warn); font-weight:650; } .folder-tree { height:432px; margin:0; padding:6px 0 18px; overflow:auto; list-style:none; scrollbar-color:#b8c8c1 transparent; } .folder-tree ul { margin:0; padding:0 0 0 18px; list-style:none; } .folder-row { min-height:42px; display:grid; grid-template-columns:30px 24px minmax(0,1fr); align-items:center; padding:3px 14px 3px 8px; border-bottom:1px solid #eef2f0; } .folder-row:hover { background:#f0f8f5; } .expand { width:28px; min-height:28px; padding:0; border-color:transparent; background:transparent; font-size:17px; line-height:1; } .folder-check { width:16px; height:16px; margin:0; accent-color:var(--brand); } .folder-label { min-width:0; cursor:pointer; } .folder-name { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:620; } .folder-path { display:block; overflow:hidden; color:var(--muted); font-size:11px; text-overflow:ellipsis; white-space:nowrap; } .empty-state { padding:76px 20px; color:var(--muted); text-align:center; } .folder-footer { min-height:62px; padding:10px 14px; display:flex; align-items:center; justify-content:space-between; gap:12px; border-top:1px solid var(--line); } .inline-note { color:var(--muted); font-size:12px; }
@@ -23,7 +23,7 @@
     .transfer-progress { margin-top:16px; padding:14px; background:var(--soft); border:1px solid var(--line); border-radius:6px; } .progress-head { display:flex; justify-content:space-between; gap:12px; font-size:12px; } .progress-head span { min-width:0; overflow:hidden; color:var(--muted); text-align:right; text-overflow:ellipsis; white-space:nowrap; } .progress-row { display:grid; grid-template-columns:minmax(0,1fr) 42px; gap:9px; align-items:center; margin:10px 0 9px; } .progress-track { height:8px; overflow:hidden; background:#d9e5df; border-radius:4px; } .progress-track span { display:block; width:0; height:100%; background:#1677ff; transition:none; } .transfer-progress[data-direction="upload"] .progress-track span { background:var(--brand); } .progress-metrics { display:grid; grid-template-columns:1fr 1fr; gap:10px; color:var(--muted); font-size:12px; font-variant-numeric:tabular-nums; } .progress-metrics span:last-child { text-align:right; } #progressPercent { color:var(--ink); font-size:13px; font-variant-numeric:tabular-nums; text-align:right; }
     .logs-panel { margin-top:22px; } .log-tools { display:flex; align-items:center; gap:10px; margin-left:auto; } .toggle { display:inline-flex; align-items:center; gap:6px; color:var(--muted); font-size:12px; } .log-output { height:300px; margin:0; padding:15px; overflow:auto; color:#dce8e2; background:#192522; font:12px/1.6 ui-monospace,SFMono-Regular,Consolas,monospace; overflow-wrap:anywhere; white-space:pre-wrap; scrollbar-color:#52645d #192522; } .spinner { display:inline-block; width:13px; height:13px; margin-right:6px; vertical-align:-2px; border:2px solid currentColor; border-right-color:transparent; border-radius:50%; animation:spin .8s linear infinite; } @keyframes spin { to { transform:rotate(360deg); } }
     .about-shell { max-width:1000px; margin:0 auto; } .about-hero { padding:48px 0 34px; border-bottom:1px solid var(--line); } .about-kicker { margin:0 0 10px; color:var(--brand); font-size:12px; font-weight:720; } .about-hero h2 { max-width:680px; margin:0; font-size:34px; line-height:1.18; font-weight:760; text-wrap:balance; } .about-hero p { max-width:620px; margin:16px 0 0; color:var(--muted); font-size:15px; line-height:1.7; } .about-grid { display:grid; grid-template-columns:1fr 1fr; gap:22px; padding-top:28px; } .about-block { min-width:0; padding:22px 0; border-top:2px solid var(--ink); } .about-block h3 { margin:0 0 10px; font-size:17px; } .about-block p { margin:0; color:var(--muted); line-height:1.7; overflow-wrap:anywhere; } .about-meta { display:grid; gap:10px; margin-top:20px; } .about-meta div { display:flex; justify-content:space-between; gap:16px; padding-bottom:10px; border-bottom:1px solid var(--line); } .about-meta span { flex:0 0 auto; color:var(--muted); } .about-meta strong,.about-meta a { min-width:0; text-align:right; } .about-meta a { color:var(--brand-deep); font-weight:650; overflow-wrap:anywhere; } .support { grid-column:1/-1; padding:28px; color:#eef7f3; background:var(--night); border-radius:8px; } .support h3 { margin:0 0 10px; font-size:22px; } .support p { max-width:700px; margin:0; color:#b9cbc4; line-height:1.7; } .qr-grid { display:grid; grid-template-columns:repeat(2,180px); gap:16px; margin-top:20px; } .qr-card { padding:12px; color:var(--ink); background:#fff; border-radius:6px; } .qr-card img { display:block; width:154px; height:154px; object-fit:contain; background:#fff; border-radius:4px; } .qr-card strong { display:block; margin:10px 0 3px; } .qr-card span { color:var(--muted); font-size:12px; }
-    .qr-card:first-child { border:2px solid #07c160; } .qr-card:nth-child(2) { border:2px solid #1677ff; } .notification-panel { margin-top:28px; } .notify-enable,.notify-events { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:18px; } .notify-field { display:grid; gap:7px; max-width:680px; margin-bottom:18px; font-weight:650; } .notify-field input { min-height:40px; padding:8px 10px; border:1px solid #bfcac6; border-radius:6px; } .auth-dialog { width:min(460px,calc(100% - 28px)); padding:0; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:8px; box-shadow:0 18px 60px rgba(10,25,20,.24); } .auth-dialog::backdrop { background:rgba(14,24,21,.56); } .dialog-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line); } .dialog-head h2 { margin:0; font-size:17px; } .dialog-close { width:34px; min-height:34px; padding:0; font-size:22px; line-height:1; } .dialog-body { padding:18px; } .sync-auth-code { display:block; width:100%; margin:14px 0 10px; padding:14px; color:var(--ink); background:#f7faf9; border:1px dashed #8aa99d; border-radius:6px; font:700 26px ui-monospace,SFMono-Regular,Consolas,monospace; text-align:center; user-select:all; } .sync-auth-code:disabled { opacity:1; cursor:wait; } .dialog-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; } .dialog-actions a[aria-disabled="true"] { opacity:.45; pointer-events:none; }
+    .qr-card:first-child { border:2px solid #07c160; } .qr-card:nth-child(2) { border:2px solid #1677ff; } .notification-panel { margin-top:28px; } .notify-enable,.notify-events { display:flex; gap:16px; flex-wrap:wrap; margin-bottom:18px; } .notify-field { display:grid; gap:7px; max-width:680px; margin-bottom:18px; font-weight:650; } .notify-field input { min-height:40px; padding:8px 10px; border:1px solid #bfcac6; border-radius:6px; } .auth-dialog { width:min(460px,calc(100% - 28px)); padding:0; color:var(--ink); background:#fff; border:1px solid var(--line); border-radius:8px; box-shadow:0 18px 60px rgba(10,25,20,.24); } .auth-dialog::backdrop { background:rgba(14,24,21,.72); } .dialog-head { display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--line); } .dialog-head h2 { margin:0; font-size:17px; } .dialog-close { width:34px; min-height:34px; padding:0; font-size:22px; line-height:1; } .dialog-body { padding:18px; } .login-brand { display:flex; align-items:center; gap:12px; margin-bottom:18px; } .login-brand img { width:42px; height:42px; border-radius:8px; } .login-brand strong { display:block; font-size:18px; } .login-field { display:grid; gap:7px; margin:18px 0 10px; font-weight:650; } .login-field input { width:100%; min-height:42px; padding:9px 11px; border:1px solid #aebdb7; border-radius:6px; } .login-error { min-height:20px; margin:8px 0 0; color:var(--bad); font-size:12px; } .sync-auth-code { display:block; width:100%; margin:14px 0 10px; padding:14px; color:var(--ink); background:#f7faf9; border:1px dashed #8aa99d; border-radius:6px; font:700 26px ui-monospace,SFMono-Regular,Consolas,monospace; text-align:center; user-select:all; } .sync-auth-code:disabled { opacity:1; cursor:wait; } .dialog-actions { display:flex; flex-wrap:wrap; gap:8px; margin-top:16px; } .dialog-actions a[aria-disabled="true"] { opacity:.45; pointer-events:none; }
     @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } } @media (max-width:980px) { .workspace { grid-template-columns:1fr; } .folder-panel { min-height:500px; } } @media (max-width:680px) { .topbar-inner,main { width:min(calc(100% - 24px),1380px); } .topbar-inner { min-height:104px; flex-wrap:wrap; gap:0 12px; } .brand { width:100%; height:52px; } .brand span,.refresh-time { display:none; } .main-nav { order:3; height:44px; } .main-nav button { padding:0 10px; } .top-statuses { margin-left:auto; } .top-statuses .status-item { padding:5px 7px; font-size:12px; } main { margin-top:16px; } .folder-tree { height:360px; } .folder-footer .inline-note { display:none; } .folder-footer button { width:100%; } .panel-head { align-items:flex-start; flex-wrap:wrap; } .panel-head .actions { width:100%; } .log-tools { width:100%; margin-left:0; } .logs-panel .panel-head { gap:8px; } .about-hero { padding:26px 0; } .about-hero h2 { font-size:28px; } .about-grid { grid-template-columns:1fr; } .qr-grid { grid-template-columns:repeat(2,minmax(0,140px)); } .qr-card img { width:114px; height:114px; } .support { padding:20px; } .button-grid { gap:7px; } }
     .auth-dialog { max-height:calc(100dvh - 28px); overflow:auto; overscroll-behavior:contain; }
     @media (max-width:680px) { .qr-grid { grid-template-columns:220px; max-width:220px; } .qr-card img { width:192px; height:192px; } }
@@ -44,6 +44,7 @@
         <span class="status-item" role="status" aria-live="polite"><i id="graphDot" class="dot" aria-hidden="true"></i><span id="graphTop">Graph</span></span>
       </div>
       <span id="refreshTime" class="refresh-time"></span>
+      <button id="logoutButton" class="topbar-action" type="button" hidden>退出</button>
     </div>
   </header>
   <div id="globalAlert" class="global-alert" role="alert" aria-live="polite" aria-atomic="true"></div>
@@ -164,24 +165,72 @@
     </div>
   </dialog>
 
+  <dialog id="loginDialog" class="auth-dialog" aria-labelledby="loginTitle">
+    <div class="dialog-body">
+      <div class="login-brand"><img src="/static/onesync-logo.png" width="42" height="42" alt=""><div><strong id="loginTitle">登录 OneSync</strong><span class="auth-detail">请输入 Unraid 容器配置中的管理口令</span></div></div>
+      <form id="loginForm">
+        <label class="login-field">管理口令<input id="adminTokenInput" name="token" type="password" minlength="16" autocomplete="current-password" required></label>
+        <p id="loginError" class="login-error" role="alert" aria-live="polite"></p>
+        <button id="loginButton" class="primary full-width" type="submit">登录</button>
+      </form>
+    </div>
+  </dialog>
+
   <script>
     const el = Object.fromEntries([...document.querySelectorAll('[id]')].map(node => [node.id, node]));
     const state = {
       health: null, selectedIds: new Set(), selectedPaths: new Set(), savedPaths: new Set(),
       folderCache: new Map(), folderItems: new Map(), busy: new Set(), logsText: '',
       pollTimer: null, graphCheckTimer: null, graphPollTimer: null, graphCheckInFlight: false, graphCheckAt: 0,
-      graphPollActive: false, graphPollInFlight: false, operationDismissed: null, syncAuthCloseTimer: null
+      graphPollActive: false, graphPollInFlight: false, operationDismissed: null, syncAuthCloseTimer: null,
+      authenticated: false, csrfToken: ''
     };
     const activePhases = new Set(['queued','dry_run','resync','restarting_monitor']);
     const modeLabels = {monitor:'持续同步中',once:'单次同步中',stopped:'已停止',reauth:'等待同步授权',resync_pending:'准备重同步',resync:'正在重同步'};
     const phaseLabels = {queued:'任务已排队',dry_run:'安全检查中',resync:'正在重同步',restarting_monitor:'正在恢复持续同步',succeeded:'重同步已完成',failed:'重同步失败',cancelled:'重同步已取消'};
 
     async function api(url, options = {}) {
-      const response = await fetch(url, options);
+      const method = String(options.method || 'GET').toUpperCase();
+      const headers = new Headers(options.headers || {});
+      if (!['GET','HEAD','OPTIONS'].includes(method) && state.csrfToken && url !== '/api/auth/login') headers.set('X-CSRF-Token', state.csrfToken);
+      const response = await fetch(url, {...options, method, headers, credentials:'same-origin'});
       let data;
       try { data = await response.json(); } catch { throw new Error(`服务返回了无效响应 (${response.status})`); }
+      if (response.status === 401 && url !== '/api/auth/login') showLogin();
       if (!response.ok) throw new Error(data.detail || `请求失败 (${response.status})`);
       return data;
+    }
+    function showLogin(message = '') {
+      state.authenticated=false; state.csrfToken=''; el.logoutButton.hidden=true; el.loginError.textContent=message;
+      if(!el.loginDialog.open) el.loginDialog.showModal();
+      requestAnimationFrame(()=>el.adminTokenInput.focus());
+    }
+    function acceptSession(session) {
+      state.authenticated=Boolean(session.authenticated); state.csrfToken=String(session.csrfToken||''); el.logoutButton.hidden=!state.authenticated;
+      if(state.authenticated && el.loginDialog.open) el.loginDialog.close();
+    }
+    async function login(event) {
+      event.preventDefault(); el.loginError.textContent=''; setButtonBusy(el.loginButton,true,'登录中…');
+      try {
+        const session=await api('/api/auth/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:el.adminTokenInput.value})});
+        el.adminTokenInput.value=''; acceptSession(session); await initializeManager();
+      } catch(error) { showLogin(error.message||'登录失败。'); }
+      finally { setButtonBusy(el.loginButton,false); }
+    }
+    async function logout() {
+      try { await api('/api/auth/logout',{method:'POST'}); } finally { clearTimeout(state.pollTimer); clearTimeout(state.graphCheckTimer); showLogin('已安全退出。'); }
+    }
+    async function initializeManager() {
+      clearTimeout(state.pollTimer); clearTimeout(state.graphCheckTimer);
+      try { await loadSavedSelection(); await refresh(); }
+      catch(error) { setGlobalError(error.message); }
+      finally { updateControls(); }
+    }
+    async function bootstrap() {
+      try {
+        const session=await api('/api/auth/session'); acceptSession(session);
+        if(session.authenticated) await initializeManager(); else showLogin();
+      } catch(error) { showLogin(`认证服务不可用：${error.message}`); }
     }
     function setGlobalError(message = '') { el.globalAlert.textContent = message; el.globalAlert.classList.toggle('show', Boolean(message)); }
     function setButtonBusy(button, busy, label) {
@@ -312,11 +361,12 @@
         const [health, logData] = await Promise.all([api('/api/health'), api('/api/logs')]);
         state.health = health; if(health.graph?.verified) state.graphCheckAt=Date.now(); setGlobalError(); updateHeader(health); updateEngine(health.sync); updateAuth(health.graph); updateLogs(logData.lines || []); updateControls();
       } catch (error) { setGlobalError(`无法连接管理服务：${error.message}`); statusDot(el.syncDot,'bad'); statusDot(el.graphDot,'bad'); el.graphTop.textContent='Graph 状态未知'; el.authState.textContent='管理服务不可达'; el.authState.className='auth-title error'; el.authDetail.textContent='请检查容器状态和端口 8098。'; }
-      finally { scheduleRefresh(); scheduleGraphCheck(); }
+      finally { if(state.authenticated){scheduleRefresh();scheduleGraphCheck();} }
     }
-    function scheduleRefresh() { clearTimeout(state.pollTimer); state.pollTimer = setTimeout(refresh, document.hidden ? 10000 : 2000); }
+    function scheduleRefresh() { clearTimeout(state.pollTimer); if(state.authenticated) state.pollTimer = setTimeout(refresh, document.hidden ? 10000 : 2000); }
     function scheduleGraphCheck() {
       clearTimeout(state.graphCheckTimer);
+      if(!state.authenticated)return;
       const delay = Math.max(5000, 30000 - (Date.now() - state.graphCheckAt));
       state.graphCheckTimer = setTimeout(checkGraphConnection, delay);
     }
@@ -332,7 +382,7 @@
         setGlobalError(`Graph 连接检查失败：${error.message}`);
       } finally {
         state.graphCheckInFlight = false;
-        scheduleGraphCheck();
+        if(state.authenticated)scheduleGraphCheck();
       }
     }
     document.addEventListener('visibilitychange', () => { clearTimeout(state.pollTimer); clearTimeout(state.graphCheckTimer); scheduleRefresh(); scheduleGraphCheck(); });
@@ -510,10 +560,13 @@
     el.aboutNavButton.addEventListener('click',()=>setView('about'));
     el.saveNotificationsButton.addEventListener('click',()=>withBusy('notifications-save',el.saveNotificationsButton,saveNotifications).catch(error=>{el.notificationStatus.textContent=error.message;}));
     el.testNotificationsButton.addEventListener('click',()=>withBusy('notifications-test',el.testNotificationsButton,async()=>{await api('/api/notifications/test',{method:'POST'});el.notificationStatus.textContent='测试通知已发送。';}).catch(error=>{el.notificationStatus.textContent=error.message;}));
+    el.loginForm.addEventListener('submit',login);
+    el.logoutButton.addEventListener('click',()=>logout().catch(error=>setGlobalError(error.message)));
+    el.loginDialog.addEventListener('cancel',event=>event.preventDefault());
     window.addEventListener('hashchange',()=>setView(['notifications','about'].includes(location.hash.slice(1))?location.hash.slice(1):'sync'));
 
     setView(['notifications','about'].includes(location.hash.slice(1))?location.hash.slice(1):'sync');
-    (async()=>{try{await loadSavedSelection();}catch(error){setGlobalError(error.message);}finally{updateControls();refresh();}})();
+    void bootstrap();
   </script>
 </body>
 </html>

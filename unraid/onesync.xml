@@ -1,14 +1,16 @@
 <?xml version="1.0"?>
 <Container version="2">
   <Name>onesync</Name>
-  <Repository>waning/onesync:0.1.3</Repository>
+  <Repository>waning/onesync:latest</Repository>
   <Registry>https://hub.docker.com/r/waning/onesync</Registry>
   <Network>bridge</Network>
-  <WebUI>http://[IP]:[PORT:8098]/</WebUI>
+  <ExtraParams>--publish 192.168.2.21:8098:8098</ExtraParams>
+  <WebUI>http://[IP]:8098/</WebUI>
   <Icon>https://raw.githubusercontent.com/Wning-ady/OneSync/main/docs/assets/onesync-logo.png</Icon>
-  <Config Name="管理端口" Target="8098" Default="8098" Mode="tcp" Description="OneSync 管理页面端口" Type="Port" Display="always" Required="true" Mask="false">8098</Config>
   <Config Name="配置目录" Target="/onedrive/conf" Default="/mnt/user/appdata/onesync" Mode="rw" Description="保存授权、范围、通知和变更记录" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/onesync</Config>
   <Config Name="同步目录" Target="/onedrive/data" Default="/mnt/user/onedrive" Mode="rw" Description="选择同步到 Unraid 的真实文件" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/onedrive</Config>
+  <Config Name="ONESYNC_ADMIN_TOKEN" Target="ONESYNC_ADMIN_TOKEN" Default="" Mode="" Description="OneSync 管理口令，至少 16 个字符；请使用随机值并妥善保管" Type="Variable" Display="always" Required="true" Mask="true"></Config>
+  <Config Name="ONESYNC_ALLOWED_HOSTS" Target="ONESYNC_ALLOWED_HOSTS" Default="192.168.2.21,127.0.0.1,localhost" Mode="" Description="允许访问管理服务的 Host 名称或地址，逗号分隔" Type="Variable" Display="advanced" Required="true" Mask="false">192.168.2.21,127.0.0.1,localhost</Config>
   <Config Name="GRAPH_CLIENT_ID" Target="GRAPH_CLIENT_ID" Default="" Mode="" Description="单租户 Entra 应用 Client ID" Type="Variable" Display="always" Required="true" Mask="false"></Config>
   <Config Name="GRAPH_TENANT_ID" Target="GRAPH_TENANT_ID" Default="5dldn8.onmicrosoft.com" Mode="" Description="Microsoft Entra 租户" Type="Variable" Display="always" Required="true" Mask="false">5dldn8.onmicrosoft.com</Config>
   <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="Unraid 用户 ID" Type="Variable" Display="advanced" Required="true" Mask="false">99</Config>
