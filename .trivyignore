@@ -1,0 +1,4 @@
+# The entrypoint needs root only to create/chown Unraid bind mounts, then execs
+# Uvicorn through gosu as PUID:PGID. Runtime audit confirms UID/GID 99:100,
+# CapEff=0 and Seccomp enabled for both the manager and OneDrive processes.
+DS-0002
