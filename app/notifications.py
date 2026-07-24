@@ -1,8 +1,12 @@
 from __future__ import annotations
 
+import asyncio
+import ipaddress
+import re
+import socket
 from datetime import datetime, timezone
 from pathlib import Path
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, parse_qsl, urlparse
 
 import httpx
 
@@ -63,11 +67,18 @@ class NotificationManager:
         if not endpoint or (not value.get("enabled") and not force):
             return
         payload = self._payload(endpoint, event, severity, message, details or {})
+        await self._assert_public_resolution(endpoint)
         try:
-            async with httpx.AsyncClient(timeout=10) as client:
+            async with httpx.AsyncClient(
+                timeout=10,
+                follow_redirects=False,
+                trust_env=False,
+            ) as client:
                 response = await client.post(endpoint, json=payload)
         except httpx.HTTPError as error:
             raise NotificationError("Webhook 无法连接，请检查地址与网络。") from error
+        if 300 <= response.status_code < 400:
+            raise NotificationError("Webhook 返回了不允许的重定向。")
         if response.is_error:
             raise NotificationError(f"Webhook 返回 HTTP {response.status_code}。")
         if self._is_wecom(endpoint):
@@ -97,12 +108,59 @@ class NotificationManager:
     @classmethod
     def _validate_endpoint(cls, endpoint: str) -> None:
         parsed = urlparse(endpoint)
-        if parsed.scheme not in {"http", "https"} or not parsed.netloc:
-            raise NotificationError("Webhook 地址必须使用有效的 HTTP/HTTPS URL。")
-        if parsed.hostname == "qyapi.weixin.qq.com":
-            key = parse_qs(parsed.query).get("key", [""])[0].strip()
-            if parsed.scheme != "https" or parsed.path != "/cgi-bin/webhook/send" or not key:
-                raise NotificationError("企业微信机器人地址格式不正确，请粘贴包含 key 的完整 Webhook 地址。")
+        try:
+            port = parsed.port
+        except ValueError as error:
+            raise NotificationError("企业微信机器人地址端口无效。") from error
+        query = parse_qsl(parsed.query, keep_blank_values=True)
+        key = query[0][1].strip() if len(query) == 1 and query[0][0] == "key" else ""
+        valid_key = bool(
+            re.fullmatch(
+                r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}",
+                key,
+            )
+        )
+        if (
+            parsed.scheme != "https"
+            or parsed.hostname != "qyapi.weixin.qq.com"
+            or parsed.path != "/cgi-bin/webhook/send"
+            or parsed.params
+            or parsed.fragment
+            or parsed.username
+            or parsed.password
+            or port not in {None, 443}
+            or not valid_key
+        ):
+            raise NotificationError(
+                "仅允许使用包含有效 key 的 HTTPS 企业微信机器人 Webhook 地址。"
+            )
+
+    @classmethod
+    async def _assert_public_resolution(cls, endpoint: str) -> None:
+        cls._validate_endpoint(endpoint)
+        hostname = urlparse(endpoint).hostname
+        assert hostname
+        try:
+            records = await asyncio.to_thread(
+                socket.getaddrinfo,
+                hostname,
+                443,
+                type=socket.SOCK_STREAM,
+            )
+        except OSError as error:
+            raise NotificationError("企业微信 Webhook 域名无法解析。") from error
+        addresses = {record[4][0] for record in records}
+        if not addresses:
+            raise NotificationError("企业微信 Webhook 域名没有可用地址。")
+        for value in addresses:
+            try:
+                address = ipaddress.ip_address(value)
+            except ValueError as error:
+                raise NotificationError("企业微信 Webhook 返回了无效地址。") from error
+            if not address.is_global:
+                raise NotificationError(
+                    "企业微信 Webhook 解析到了私网、回环、链路本地或保留地址，已拒绝发送。"
+                )
 
     @staticmethod
     def _mask_endpoint(endpoint: str) -> str:
