@@ -6,6 +6,12 @@
 
 OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活跃的 `abraunegg/onedrive`。它提供浏览器管理页、设备代码授权、文件夹范围选择、单次同步、持续同步、受控重同步、中文日志和企业微信通知。
 
+## v0.1.5 同步稳定性修复
+
+- 网络不稳定场景将 OneDrive 并发线程固定为 3，降低 Graph 连接被对端重置的概率
+- 下载失败事件识别超过本地 255 字节上限的文件名，并提示在云端缩短名称
+- 保留 HTTP/1.1、IPv4 和传输指标配置
+
 ## v0.1.4 安全更新
 
 - 新增管理口令登录、HttpOnly/SameSite 会话与 CSRF 防护
@@ -18,7 +24,7 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 ## 快速部署
 
-镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.4`
+镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.5`
 
 必填配置：
 
@@ -41,6 +47,12 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 OneSync is a bidirectional OneDrive sync manager for Unraid, built on the maintained `abraunegg/onedrive` client. It provides a browser UI, device-code authorization, selective folder sync, one-shot and continuous sync, controlled resync, logs, and WeCom notifications.
 
+## v0.1.5 Sync Stability Fix
+
+- Fix OneDrive worker concurrency at 3 to reduce Graph peer resets on unstable links
+- Detect local 255-byte filename limit failures and explain that the cloud name must be shortened
+- Keep HTTP/1.1, IPv4, and transfer metrics enabled
+
 ## v0.1.4 Security Update
 
 - Admin-token login with HttpOnly/SameSite sessions and CSRF protection
@@ -53,7 +65,7 @@ OneSync is a bidirectional OneDrive sync manager for Unraid, built on the mainta
 
 ## Quick Deployment
 
-Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.4`
+Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.5`
 
 Required settings:
 

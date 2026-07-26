@@ -104,6 +104,19 @@ async def test_download_metrics_read_partial_file(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_long_download_name_is_reported_before_resync(tmp_path) -> None:
+    manager = SyncManager(tmp_path / "config", tmp_path / "data")
+    long_name = "中" * 86 + ".jpg"  # 262 UTF-8 bytes
+
+    manager._append_log(f"Downloading file: 文件/{long_name} ... failed!")
+
+    event = list(manager.events)[-1]
+    assert event["status"] == "failed"
+    assert "262 字节" in event["detail"]
+    assert "缩短" in event["detail"]
+
+
+@pytest.mark.asyncio
 async def test_sync_authorization_details_are_exposed(tmp_path) -> None:
     manager = SyncManager(tmp_path / "config", tmp_path / "data")
     manager.mode = "reauth"
