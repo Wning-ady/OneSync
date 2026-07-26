@@ -41,6 +41,9 @@ class SyncManager:
     upload_speed: float = 0
     download_bytes: int = 0
     upload_bytes: int = 0
+    scan_items: int | None = None
+    planned_downloads: int | None = None
+    activity: str = "等待同步任务"
     _download_sample: tuple[float, int] | None = None
     _upload_sample: tuple[float, int] | None = None
     authorization_state: str = "idle"
@@ -90,6 +93,22 @@ class SyncManager:
 
     def _append_log(self, line: str) -> None:
         self.logs.append(line)
+        if "Fetching items from the OneDrive API" in line:
+            self.activity = "正在读取 OneDrive 云端目录"
+        elif "Scanning the local file system" in line:
+            self.activity = "正在检查本地文件变更"
+        elif "Performing a database consistency" in line:
+            self.activity = "正在校验同步索引"
+        elif "Sync with Microsoft OneDrive is complete" in line:
+            self.activity = "本轮同步已完成"
+        scan = re.search(r"Processing ([\d,]+) applicable JSON items", line)
+        if scan:
+            self.scan_items = int(scan.group(1).replace(",", ""))
+            self.activity = f"正在比对 {self.scan_items:,} 个云端条目"
+        planned = re.search(r"Number of items to download from Microsoft OneDrive:\s*(\d+)", line)
+        if planned:
+            self.planned_downloads = int(planned.group(1))
+            self.activity = f"已发现 {self.planned_downloads} 个待下载文件"
         login_url = re.search(
             r"https://login\.microsoft(?:online)?\.com/[^\s<>\"']+",
             line,
@@ -116,11 +135,13 @@ class SyncManager:
             if kind == "Downloading":
                 current_size = self._transfer_size(path, "download")
                 self.active_download, self.download_percent = path, int(percent)
+                self.activity = "正在下载文件"
                 if self._download_sample and now > self._download_sample[0]: self.download_speed = max(0, current_size - self._download_sample[1]) / (now - self._download_sample[0])
                 self._download_sample = (now, current_size); self.download_bytes = current_size
             else:
                 current_size = self._transfer_size(path, "upload")
                 self.active_upload, self.upload_percent = path, int(percent)
+                self.activity = "正在上传文件"
                 transferred = int(current_size * int(percent) / 100)
                 if self._upload_sample and now > self._upload_sample[0]: self.upload_speed = max(0, transferred - self._upload_sample[1]) / (now - self._upload_sample[0])
                 self._upload_sample = (now, transferred); self.upload_bytes = transferred
@@ -224,6 +245,9 @@ class SyncManager:
                 return
             self._pending_failed_downloads.clear()
             self._last_failed_path = None
+            self.scan_items = None
+            self.planned_downloads = None
+            self.activity = "正在启动同步引擎"
             arguments = ["--monitor"] if mode == "monitor" else ["--sync"]
             self.logs.append("Starting: onedrive " + " ".join(arguments))
             self.process = await asyncio.create_subprocess_exec(
@@ -266,6 +290,9 @@ class SyncManager:
             async with self._lock:
                 self._pending_failed_downloads.clear()
                 self._last_failed_path = None
+                self.scan_items = None
+                self.planned_downloads = None
+                self.activity = "正在准备受控重同步"
                 self.mode = "resync"
                 self._set_operation("dry_run", "Running safety dry-run.")
                 self.logs.append("Running dry-run before resync.")
@@ -393,5 +420,19 @@ class SyncManager:
                 "startedAt": self.operation_started_at,
                 "finishedAt": self.operation_finished_at,
             },
-            "progress": {"downloadsCompleted": self.completed_downloads, "uploadsCompleted": self.completed_uploads, "activeDownload": self.active_download, "activeUpload": self.active_upload, "downloadPercent": self.download_percent, "uploadPercent": self.upload_percent, "downloadSpeed": self.download_speed, "uploadSpeed": self.upload_speed, "downloadBytes": self.download_bytes, "uploadBytes": self.upload_bytes},
+            "progress": {
+                "downloadsCompleted": self.completed_downloads,
+                "uploadsCompleted": self.completed_uploads,
+                "activeDownload": self.active_download,
+                "activeUpload": self.active_upload,
+                "downloadPercent": self.download_percent,
+                "uploadPercent": self.upload_percent,
+                "downloadSpeed": self.download_speed,
+                "uploadSpeed": self.upload_speed,
+                "downloadBytes": self.download_bytes,
+                "uploadBytes": self.upload_bytes,
+                "scanItems": self.scan_items,
+                "plannedDownloads": self.planned_downloads,
+                "activity": self.activity,
+            },
         }

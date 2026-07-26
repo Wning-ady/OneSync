@@ -6,6 +6,14 @@
 
 OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活跃的 `abraunegg/onedrive`。它提供浏览器管理页、设备代码授权、文件夹范围选择、单次同步、持续同步、受控重同步、中文日志和企业微信通知。
 
+## v0.1.6 交互与重同步可见性更新
+
+- 深色紧凑管理界面，统一同步、通知、关于页面的视觉层级
+- 健康状态改为本地快速响应，避免慢速 Graph 请求阻塞管理页
+- 日志仅读取最近记录并按传输、完成、警告、错误分色
+- 重同步显示云端条目扫描数、待下载数和当前工作阶段
+- HTTP 403 下载失败按单个文件归因，避免多个失败项混淆
+
 ## v0.1.5 同步稳定性修复
 
 - 网络不稳定场景将 OneDrive 并发线程固定为 3，降低 Graph 连接被对端重置的概率
@@ -24,7 +32,7 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 ## 快速部署
 
-镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.5`
+镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.6`
 
 必填配置：
 
@@ -47,6 +55,14 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 OneSync is a bidirectional OneDrive sync manager for Unraid, built on the maintained `abraunegg/onedrive` client. It provides a browser UI, device-code authorization, selective folder sync, one-shot and continuous sync, controlled resync, logs, and WeCom notifications.
 
+## v0.1.6 Interaction and Resync Visibility
+
+- Compact dark management interface with consistent sync, notifications, and about views
+- Local fast health responses so slow Graph calls do not block the management page
+- Recent log window with transfer, completion, warning, and error colors
+- Resync visibility for scanned cloud items, planned downloads, and current work phase
+- Per-file HTTP 403 classification to keep multiple failures distinct
+
 ## v0.1.5 Sync Stability Fix
 
 - Fix OneDrive worker concurrency at 3 to reduce Graph peer resets on unstable links
@@ -65,7 +81,7 @@ OneSync is a bidirectional OneDrive sync manager for Unraid, built on the mainta
 
 ## Quick Deployment
 
-Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.5`
+Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.6`
 
 Required settings:
 

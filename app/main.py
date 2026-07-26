@@ -244,7 +244,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 "ok": True,
                 "version": os.environ.get("ONESYNC_VERSION", "dev"),
             }
-        graph_status = await graph.check_connection()
+        # Health must stay local and fast. Graph reachability is refreshed by its
+        # dedicated endpoint so a slow Microsoft request never freezes the UI.
+        graph_status = graph.auth_status()
         account = await graph.profile() if graph_status.get("verified") else {}
         return {
             "ok": True,
@@ -258,8 +260,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         }
 
     @app.get("/api/logs")
-    async def logs() -> dict[str, list[str]]:
-        return {"lines": list(sync.logs)}
+    async def logs(limit: int = 160) -> dict[str, list[str]]:
+        recent = list(sync.logs)[-max(1, min(limit, 400)):]
+        return {"lines": recent}
 
     @app.get("/api/notifications")
     async def notification_settings() -> dict[str, object]:
