@@ -117,6 +117,29 @@ async def test_long_download_name_is_reported_before_resync(tmp_path) -> None:
 
 
 @pytest.mark.asyncio
+async def test_forbidden_download_is_classified_without_deleting_local_file(tmp_path) -> None:
+    manager = SyncManager(tmp_path / "config", tmp_path / "data")
+    path = "backup/private/report.zip"
+    manager._append_log(f"Downloading file: {path} ... failed!")
+    manager._append_log("ERROR: Microsoft OneDrive API returned status code 403 (Forbidden)")
+
+    event = list(manager.events)[-1]
+    assert event["action"] == "remote_forbidden"
+    assert event["status"] == "failed"
+    assert "HTTP 403" in event["detail"]
+    assert "未删除本地文件" in event["detail"]
+    assert manager._last_failed_path is None
+
+
+@pytest.mark.asyncio
+async def test_last_error_prefers_actionable_remote_failure(tmp_path) -> None:
+    manager = SyncManager(tmp_path / "config", tmp_path / "data")
+    manager._append_log("Downloading file: backup/private/report.zip ... failed!")
+    manager._append_log("ERROR: Microsoft OneDrive API returned status code 403 (Forbidden)")
+    assert "HTTP 403" in manager._last_error()
+
+
+@pytest.mark.asyncio
 async def test_sync_authorization_details_are_exposed(tmp_path) -> None:
     manager = SyncManager(tmp_path / "config", tmp_path / "data")
     manager.mode = "reauth"
