@@ -10,6 +10,8 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 
+MAX_LOCAL_NAME_BYTES = 255
+
 
 @dataclass
 class SyncManager:
@@ -71,6 +73,20 @@ class SyncManager:
         with self._event_path().open("a", encoding="utf-8") as file:
             file.write(json.dumps(event, ensure_ascii=False) + "\n")
 
+    @staticmethod
+    def _download_failure_detail(path: str) -> str:
+        """Explain failures that the local filesystem can predict from the path."""
+        for component in path.replace("\\", "/").split("/"):
+            if not component:
+                continue
+            size = len(component.encode("utf-8"))
+            if size > MAX_LOCAL_NAME_BYTES:
+                return (
+                    f"本地文件名过长（{size} 字节，限制 {MAX_LOCAL_NAME_BYTES}）："
+                    "请在 OneDrive 云端缩短该文件名后再同步。"
+                )
+        return "下载失败，正在确认原因"
+
     def _append_log(self, line: str) -> None:
         self.logs.append(line)
         login_url = re.search(
@@ -117,7 +133,7 @@ class SyncManager:
                 self._record("cloud_to_local", "download", path, size=size)
             else:
                 self._last_failed_path = path
-                self._record("cloud_to_local", "download", path, "failed", "下载失败，正在确认原因")
+                self._record("cloud_to_local", "download", path, "failed", self._download_failure_detail(path))
         elif upload:
             path, outcome = upload.groups()
             self.active_upload = None
