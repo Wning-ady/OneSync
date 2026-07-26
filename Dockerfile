@@ -35,7 +35,7 @@ RUN rm -f /opt/onesync/bin/pip /opt/onesync/bin/pip3 /opt/onesync/bin/pip3.* \
 
 FROM driveone/onedrive:edge@${ONEDRIVE_BASE_DIGEST}
 
-ARG APP_VERSION=0.1.5
+ARG APP_VERSION=0.1.6
 
 USER root
 RUN apt-get update \

@@ -27,6 +27,62 @@
     @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important; } } @media (max-width:980px) { .workspace { grid-template-columns:1fr; } .folder-panel { min-height:500px; } } @media (max-width:680px) { .topbar-inner,main { width:min(calc(100% - 24px),1380px); } .topbar-inner { min-height:104px; flex-wrap:wrap; gap:0 12px; } .brand { width:100%; height:52px; } .brand span,.refresh-time { display:none; } .main-nav { order:3; height:44px; } .main-nav button { padding:0 10px; } .top-statuses { margin-left:auto; } .top-statuses .status-item { padding:5px 7px; font-size:12px; } main { margin-top:16px; } .folder-tree { height:360px; } .folder-footer .inline-note { display:none; } .folder-footer button { width:100%; } .panel-head { align-items:flex-start; flex-wrap:wrap; } .panel-head .actions { width:100%; } .log-tools { width:100%; margin-left:0; } .logs-panel .panel-head { gap:8px; } .about-hero { padding:26px 0; } .about-hero h2 { font-size:28px; } .about-grid { grid-template-columns:1fr; } .qr-grid { grid-template-columns:repeat(2,minmax(0,140px)); } .qr-card img { width:114px; height:114px; } .support { padding:20px; } .button-grid { gap:7px; } }
     .auth-dialog { max-height:calc(100dvh - 28px); overflow:auto; overscroll-behavior:contain; }
     @media (max-width:680px) { .qr-grid { grid-template-columns:220px; max-width:220px; } .qr-card img { width:192px; height:192px; } }
+    /* Desktop-settings visual language: quiet, compact and readable during long syncs. */
+    :root { color-scheme:dark; --ink:#f1f4f3; --muted:#a5aca9; --line:#373e3b; --paper:#202422; --canvas:#181b1a; --soft:#282d2a; --brand:#1598ff; --brand-deep:#0879d5; --good:#47d39a; --warn:#efbd5b; --bad:#ff756d; --night:#1d211f; }
+    body { background:var(--canvas); color:var(--ink); }
+    button { color:var(--ink); background:#303634; border-color:#424b47; box-shadow:none; }
+    button:hover:not(:disabled) { background:#3a423f; border-color:#69736e; }
+    button.primary { background:var(--brand); border-color:var(--brand); }
+    button.primary:hover:not(:disabled) { background:var(--brand-deep); border-color:var(--brand-deep); }
+    button.danger { color:#ffaaa5; border-color:#754944; }
+    .topbar { background:#1d211f; border-bottom-color:var(--line); }
+    .topbar-inner { min-height:72px; }
+    .brand img { border-radius:8px; }
+    .brand h1 { font-weight:700; }
+    .main-nav { gap:6px; align-items:center; }
+    .main-nav button { min-height:38px; padding:0 14px; color:#aeb5b2; border:1px solid transparent; border-radius:7px; }
+    .main-nav button:hover:not(:disabled),.main-nav button.active { color:#fff; background:#282d2b; border-color:#282d2b; }
+    .top-statuses .status-item,.topbar-action { color:#dce4e0; background:#282e2b; border-color:#3b4540; }
+    main { margin-top:22px; }
+    .workspace { grid-template-columns:minmax(0,1fr) 380px; gap:18px; }
+    .panel { background:var(--paper); border-color:var(--line); box-shadow:none; }
+    .panel-head { background:#202422; border-bottom-color:var(--line); }
+    .panel-head h2 { font-size:16px; }
+    .panel-head .sub,.inline-note,.selection-meta,.folder-path,.auth-detail,.state-detail { color:var(--muted); }
+    .folder-toolbar { background:#242a27; border-bottom-color:var(--line); }
+    .folder-row { border-bottom-color:#2e3532; }
+    .folder-row:hover { background:#29332e; }
+    .expand { color:#b5bdb9; }
+    .folder-footer { background:#1d211f; border-top-color:var(--line); }
+    .engine-state { border-bottom-color:var(--line); }
+    .state-main { font-size:22px; }
+    .operation { color:#cfe8dc; background:#24362e; border-left-color:var(--good); border-radius:0 6px 6px 0; }
+    .operation.success { color:#cfe8dc; background:#24362e; }
+    .operation.error { color:#ffd0cb; background:#442825; }
+    .device { color:#f3dfac; background:#3b3220; border-color:#735d2d; }
+    .device-code,.sync-auth-code { color:var(--ink); background:#262b29; border-color:#7d8d86; }
+    .transfer-progress { background:#252b28; border-color:#353d39; }
+    .progress-track { background:#3a433f; }
+    .progress-track span { background:var(--brand); }
+    .transfer-progress[data-direction="upload"] .progress-track span { background:var(--good); }
+    .log-output { height:340px; color:#ced8d3; background:#151918; }
+    .log-line { min-height:19px; padding:1px 0; }
+    .log-output .log-error { color:#ff938a; }
+    .log-output .log-warn { color:#f1c46b; }
+    .log-output .log-success { color:#61d9a4; }
+    .log-output .log-progress { color:#80c5ff; }
+    .about-hero { border-bottom-color:var(--line); }
+    .about-kicker { color:#72c8ff; }
+    .about-block { border-top-color:#728079; }
+    .about-meta div { border-bottom-color:var(--line); }
+    .about-meta a { color:#78caff; }
+    .support { background:#202b27; }
+    .qr-card { color:var(--ink); background:#f8fbfa; }
+    .auth-dialog { color:var(--ink); background:#202422; border-color:#444d49; }
+    .dialog-head { border-bottom-color:var(--line); }
+    .login-field input,.notify-field input { color:var(--ink); background:#262b29; border-color:#4a5550; }
+    .global-alert { color:#ffd0cb; background:#402522; border-bottom-color:#6d3c38; }
+    @media (max-width:680px) { .main-nav button { padding:0 9px; } .workspace { gap:14px; } }
   </style>
 </head>
 <body>
@@ -183,7 +239,7 @@
       folderCache: new Map(), folderItems: new Map(), busy: new Set(), logsText: '',
       pollTimer: null, graphCheckTimer: null, graphPollTimer: null, graphCheckInFlight: false, graphCheckAt: 0,
       graphPollActive: false, graphPollInFlight: false, operationDismissed: null, syncAuthCloseTimer: null,
-      authenticated: false, csrfToken: ''
+      authenticated: false, csrfToken: '', refreshInFlight: false, lastRefreshAt: 0
     };
     const activePhases = new Set(['queued','dry_run','resync','restarting_monitor']);
     const modeLabels = {monitor:'持续同步中',once:'单次同步中',stopped:'已停止',reauth:'等待同步授权',resync_pending:'准备重同步',resync:'正在重同步'};
@@ -283,12 +339,14 @@
       const panel = el.progressBar.closest('.transfer-progress'); panel.dataset.direction = direction;
       el.progressBar.style.width = percent === null ? '0%' : `${percent}%`;
       el.progressPercent.textContent = percent === null ? '--' : `${percent}%`;
-      el.progressSummary.textContent = currentPath || (done ? `已完成 ${done} 个文件` : sync.running ? '等待传输任务' : '同步未运行');
-      el.downloadSpeed.textContent = `下载速度 ${Number(progress.downloadSpeed || 0) > 0 ? `${formatBytes(progress.downloadSpeed)}/s` : '等待指标'}`;
-      el.uploadSpeed.textContent = `上传速度 ${Number(progress.uploadSpeed || 0) > 0 ? `${formatBytes(progress.uploadSpeed)}/s` : '等待指标'}`;
+      el.progressSummary.textContent = currentPath || progress.activity || (done ? `已完成 ${done} 个文件` : sync.running ? '等待传输任务' : '同步未运行');
+      el.downloadSpeed.textContent = `下载速度 ${Number(progress.downloadSpeed || 0) > 0 ? `${formatBytes(progress.downloadSpeed)}/s` : '暂无传输'}`;
+      el.uploadSpeed.textContent = `上传速度 ${Number(progress.uploadSpeed || 0) > 0 ? `${formatBytes(progress.uploadSpeed)}/s` : '暂无传输'}`;
       el.progressDetail.textContent = [
         downloading ? `云端 → 本地 · 已接收 ${formatBytes(currentBytes)}` : '',
         uploading ? `本地 → 云端 · 已发送 ${formatBytes(currentBytes)}` : '',
+        progress.scanItems ? `已校验 ${Number(progress.scanItems).toLocaleString('zh-CN')} 个云端条目` : '',
+        Number.isFinite(Number(progress.plannedDownloads)) ? `待下载 ${progress.plannedDownloads} 个文件` : '',
         `下载完成 ${progress.downloadsCompleted || 0}，上传完成 ${progress.uploadsCompleted || 0}`,
       ].filter(Boolean).join(' · ');
       updateSyncAuthorization(sync.authorization || {});
@@ -350,20 +408,23 @@
       const op = state.health?.sync?.operation || {}, locked = activePhases.has(op.phase);
       document.querySelectorAll('.sync-command').forEach(button => {
         const action = button.dataset.action;
-        button.disabled = state.busy.size > 0 || (locked && action !== 'stop');
+        button.disabled = action === 'stop' ? !(state.health?.sync?.running || locked) : state.busy.size > 0 || locked;
       });
       el.resyncButton.disabled = state.busy.size > 0 || locked || state.savedPaths.size === 0;
       el.saveSelectionButton.disabled = state.busy.size > 0 || locked || !selectionChanged() || state.selectedIds.size === 0;
       el.graphAuthButton.disabled = state.busy.has('graph-auth') || state.graphPollActive;
     }
     async function refresh() {
+      if (state.refreshInFlight) return;
+      state.refreshInFlight = true;
       try {
-        const [health, logData] = await Promise.all([api('/api/health'), api('/api/logs')]);
+        const [health, logData] = await Promise.all([api('/api/health'), api('/api/logs?limit=160')]);
         state.health = health; if(health.graph?.verified) state.graphCheckAt=Date.now(); setGlobalError(); updateHeader(health); updateEngine(health.sync); updateAuth(health.graph); updateLogs(logData.lines || []); updateControls();
+        state.lastRefreshAt=Date.now();
       } catch (error) { setGlobalError(`无法连接管理服务：${error.message}`); statusDot(el.syncDot,'bad'); statusDot(el.graphDot,'bad'); el.graphTop.textContent='Graph 状态未知'; el.authState.textContent='管理服务不可达'; el.authState.className='auth-title error'; el.authDetail.textContent='请检查容器状态和端口 8098。'; }
-      finally { if(state.authenticated){scheduleRefresh();scheduleGraphCheck();} }
+      finally { state.refreshInFlight=false; if(state.authenticated)scheduleRefresh(); }
     }
-    function scheduleRefresh() { clearTimeout(state.pollTimer); if(state.authenticated) state.pollTimer = setTimeout(refresh, document.hidden ? 10000 : 2000); }
+    function scheduleRefresh() { clearTimeout(state.pollTimer); if(state.authenticated) { const active=Boolean(state.health?.sync?.running)||activePhases.has(state.health?.sync?.operation?.phase); state.pollTimer = setTimeout(refresh, document.hidden ? 15000 : active ? 3000 : 6000); } }
     function scheduleGraphCheck() {
       clearTimeout(state.graphCheckTimer);
       if(!state.authenticated)return;
@@ -385,11 +446,14 @@
         if(state.authenticated)scheduleGraphCheck();
       }
     }
-    document.addEventListener('visibilitychange', () => { clearTimeout(state.pollTimer); clearTimeout(state.graphCheckTimer); scheduleRefresh(); scheduleGraphCheck(); });
+    document.addEventListener('visibilitychange', () => { clearTimeout(state.pollTimer); scheduleRefresh(); });
     function updateLogs(lines) {
       const text = lines.join('\n'); if (text === state.logsText) return;
       const atBottom = el.logs.scrollTop + el.logs.clientHeight >= el.logs.scrollHeight - 16;
-      state.logsText = text; el.logs.textContent = text; el.logCount.textContent = `${lines.length} 行`;
+      state.logsText = text; el.logs.replaceChildren();
+      const fragment=document.createDocumentFragment();
+      lines.forEach(line=>{const row=document.createElement('div');row.className='log-line'; if(/ERROR|failed|拒绝|异常/i.test(line))row.classList.add('log-error');else if(/WARNING|interrupted|Retrying|重试/i.test(line))row.classList.add('log-warn');else if(/done|complete|成功|已完成/i.test(line))row.classList.add('log-success');else if(/Downloading|Uploading|Fetching|Processing|Scanning/i.test(line))row.classList.add('log-progress');row.textContent=line;fragment.append(row);});
+      el.logs.append(fragment); el.logCount.textContent = `最近 ${lines.length} 行`;
       if (el.followLogs.checked && atBottom) el.logs.scrollTop = el.logs.scrollHeight;
     }
     async function syncAction(action, button) {
