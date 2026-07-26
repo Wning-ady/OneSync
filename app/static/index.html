@@ -422,7 +422,7 @@
         state.health = health; if(health.graph?.verified) state.graphCheckAt=Date.now(); setGlobalError(); updateHeader(health); updateEngine(health.sync); updateAuth(health.graph); updateLogs(logData.lines || []); updateControls();
         state.lastRefreshAt=Date.now();
       } catch (error) { setGlobalError(`无法连接管理服务：${error.message}`); statusDot(el.syncDot,'bad'); statusDot(el.graphDot,'bad'); el.graphTop.textContent='Graph 状态未知'; el.authState.textContent='管理服务不可达'; el.authState.className='auth-title error'; el.authDetail.textContent='请检查容器状态和端口 8098。'; }
-      finally { state.refreshInFlight=false; if(state.authenticated)scheduleRefresh(); }
+      finally { state.refreshInFlight=false; if(state.authenticated){scheduleRefresh();scheduleGraphCheck();} }
     }
     function scheduleRefresh() { clearTimeout(state.pollTimer); if(state.authenticated) { const active=Boolean(state.health?.sync?.running)||activePhases.has(state.health?.sync?.operation?.phase); state.pollTimer = setTimeout(refresh, document.hidden ? 15000 : active ? 3000 : 6000); } }
     function scheduleGraphCheck() {
@@ -446,7 +446,7 @@
         if(state.authenticated)scheduleGraphCheck();
       }
     }
-    document.addEventListener('visibilitychange', () => { clearTimeout(state.pollTimer); scheduleRefresh(); });
+    document.addEventListener('visibilitychange', () => { clearTimeout(state.pollTimer); clearTimeout(state.graphCheckTimer); scheduleRefresh(); scheduleGraphCheck(); });
     function updateLogs(lines) {
       const text = lines.join('\n'); if (text === state.logsText) return;
       const atBottom = el.logs.scrollTop + el.logs.clientHeight >= el.logs.scrollHeight - 16;
