@@ -34,6 +34,7 @@ class SyncManager:
     active_download: str | None = None
     active_upload: str | None = None
     _last_failed_path: str | None = None
+    _pending_failed_downloads: deque[str] = field(default_factory=deque)
     download_percent: int | None = None
     upload_percent: int | None = None
     download_speed: float = 0
@@ -133,6 +134,7 @@ class SyncManager:
                 self._record("cloud_to_local", "download", path, size=size)
             else:
                 self._last_failed_path = path
+                self._pending_failed_downloads.append(path)
                 self._record("cloud_to_local", "download", path, "failed", self._download_failure_detail(path))
         elif upload:
             path, outcome = upload.groups()
@@ -150,9 +152,26 @@ class SyncManager:
             self._record("cloud_to_local", "delete", line.split(":", 1)[1].strip())
         elif "Conflict" in line:
             self._record("conflict", "conflict", status="warning", detail=line)
-        elif "status code 404" in line and self._last_failed_path:
-            self._record("cloud_to_local", "remote_missing", self._last_failed_path, "warning", "云端对象已删除或移动；未自动删除本地文件")
-            self._last_failed_path = None
+        elif "status code 404" in line and (self._pending_failed_downloads or self._last_failed_path):
+            path = self._last_failed_path or self._pending_failed_downloads.popleft()
+            self._record("cloud_to_local", "remote_missing", path or "", "warning", "云端对象已删除或移动；未自动删除本地文件")
+            if self._pending_failed_downloads and self._pending_failed_downloads[-1] == path:
+                self._pending_failed_downloads.pop()
+            self._last_failed_path = self._pending_failed_downloads[-1] if self._pending_failed_downloads else None
+        elif "status code 403" in line and (self._pending_failed_downloads or self._last_failed_path):
+            # A 403 is distinct from a transient download failure: Graph found the
+            # object but denied access. Keep the local copy untouched and expose an
+            # actionable event instead of suggesting a filename or network issue.
+            self._record(
+                "cloud_to_local",
+                "remote_forbidden",
+                self._last_failed_path or self._pending_failed_downloads.popleft(),
+                "failed",
+                "云端对象访问被拒绝（HTTP 403）；请检查文件权限、共享状态或重新授权后重试，未删除本地文件。",
+            )
+            if self._pending_failed_downloads and self._pending_failed_downloads[-1] == self._last_failed_path:
+                self._pending_failed_downloads.pop()
+            self._last_failed_path = self._pending_failed_downloads[-1] if self._pending_failed_downloads else None
 
     def _set_operation(self, phase: str, message: str, error: str | None = None) -> None:
         now = datetime.now(timezone.utc).isoformat()
@@ -203,6 +222,8 @@ class SyncManager:
         async with self._lock:
             if self.process and self.process.returncode is None:
                 return
+            self._pending_failed_downloads.clear()
+            self._last_failed_path = None
             arguments = ["--monitor"] if mode == "monitor" else ["--sync"]
             self.logs.append("Starting: onedrive " + " ".join(arguments))
             self.process = await asyncio.create_subprocess_exec(
@@ -243,6 +264,8 @@ class SyncManager:
         try:
             await self.stop()
             async with self._lock:
+                self._pending_failed_downloads.clear()
+                self._last_failed_path = None
                 self.mode = "resync"
                 self._set_operation("dry_run", "Running safety dry-run.")
                 self.logs.append("Running dry-run before resync.")
@@ -291,7 +314,18 @@ class SyncManager:
                 self.mode = "stopped"
 
     def _last_error(self) -> str | None:
+        for event in reversed(self.events):
+            if event.get("status") == "failed" and event.get("detail"):
+                detail = str(event["detail"])
+                if event.get("action") == "remote_forbidden":
+                    return detail
+                if event.get("action") == "download" and "本地文件名过长" in detail:
+                    return detail
         for line in reversed(self.logs):
+            if "status code 403" in line:
+                return "云端对象访问被拒绝（HTTP 403）；请检查文件权限、共享状态或重新授权后重试，未删除本地文件。"
+            if "File name too long" in line:
+                return "本地文件名过长；请在 OneDrive 云端缩短文件名后再同步。"
             if "AADSTS" in line or "ERROR" in line or "Exception" in line:
                 return line
         return None
