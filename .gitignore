@@ -12,3 +12,4 @@ security-audit/
 .DS_Store
 frontend/node_modules/
 frontend/dist/
+frontend/*.tsbuildinfo
