@@ -267,7 +267,7 @@ function App() {
             <p className="file-path" title={currentPath}>{currentPath}</p>
             <div className="progress-line"><div className={`progress-track ${direction}`}><span style={{ width: `${percent ?? 0}%` }} /></div><strong>{percent === undefined ? "--" : `${percent}%`}</strong></div>
             <div className="metrics"><span>下载 {bytes(progress.downloadSpeed)}/s</span><span>上传 {bytes(progress.uploadSpeed)}/s</span><span>完成 {Number(progress.downloadsCompleted || 0) + Number(progress.uploadsCompleted || 0)} 个</span></div>
-            <p className="muted mini">{progress.scanItems ? `已校验 ${progress.scanItems.toLocaleString("zh-CN")} 个云端条目` : progress.plannedDownloads !== undefined ? `待下载 ${progress.plannedDownloads} 个文件` : "传输开始后显示速度与进度"}</p>
+            <p className="muted mini">{progress.scanItems ? `已校验 ${progress.scanItems.toLocaleString("zh-CN")} 个云端条目` : progress.plannedDownloads != null ? `待下载 ${progress.plannedDownloads} 个文件` : "传输开始后显示速度与进度"}</p>
           </div>
         </section>
         <section className="surface control-surface"><div className="surface-head compact"><div><span className="label">操作</span><h2>同步控制</h2></div><span className="muted mini">范围：{savedPaths.size ? `已选择 ${savedPaths.size} 个文件夹` : "尚未选择"}</span></div><div className="control-row">
