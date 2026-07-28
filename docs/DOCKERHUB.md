@@ -6,6 +6,12 @@
 
 OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活跃的 `abraunegg/onedrive`。它提供浏览器管理页、设备代码授权、文件夹范围选择、单次同步、持续同步、受控重同步、中文日志和企业微信通知。
 
+## v0.1.8 React 前端与免口令访问
+
+- 管理页改为 React + TypeScript + 原生 CSS，保留同步、授权、范围、通知、日志与关于页功能
+- 移除内置管理口令与浏览器会话，LAN 内直接访问管理页
+- 容器将两个挂载根目录设置为 `drwxrwxrwx`，便于 Unraid、SMB 与同步进程协作
+
 ## v0.1.7 Graph 状态热修复
 
 - 恢复独立的 Graph 连通性校验，保持管理页健康状态轻量且不阻塞
@@ -26,7 +32,6 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 ## v0.1.4 安全更新
 
-- 新增管理口令登录、HttpOnly/SameSite 会话与 CSRF 防护
 - 增加严格 Host/Origin 校验、跨站请求防护和 API 速率限制
 - 管理端口仅绑定指定 Unraid LAN 地址
 - Webhook 仅允许 HTTPS 企业微信机器人，并拒绝私网 DNS、环境代理与重定向
@@ -36,13 +41,12 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 ## 快速部署
 
-镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.7`
+镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.8`
 
 必填配置：
 
 - `GRAPH_CLIENT_ID`：Entra 应用 Client ID
 - `GRAPH_TENANT_ID`：租户 ID 或域名
-- `ONESYNC_ADMIN_TOKEN`：至少 16 字符的随机管理口令
 - `ONESYNC_ALLOWED_HOSTS`：允许访问的 Unraid IP 或域名
 
 持久化目录：
@@ -58,6 +62,12 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 ---
 
 OneSync is a bidirectional OneDrive sync manager for Unraid, built on the maintained `abraunegg/onedrive` client. It provides a browser UI, device-code authorization, selective folder sync, one-shot and continuous sync, controlled resync, logs, and WeCom notifications.
+
+## v0.1.8 React UI and Password-Free LAN Access
+
+- React + TypeScript + native CSS management UI with sync, authorization, scope, notifications, logs, and about views
+- Remove built-in admin-token sessions for direct trusted-LAN access
+- Set both mounted root directories to `drwxrwxrwx` for Unraid, SMB, and sync-process collaboration
 
 ## v0.1.7 Graph Status Hotfix
 
@@ -79,7 +89,6 @@ OneSync is a bidirectional OneDrive sync manager for Unraid, built on the mainta
 
 ## v0.1.4 Security Update
 
-- Admin-token login with HttpOnly/SameSite sessions and CSRF protection
 - Strict Host/Origin validation, cross-site request protection, and API rate limiting
 - Management port binding to an explicit Unraid LAN address
 - HTTPS-only WeCom webhook allowlist with private-DNS, proxy, and redirect rejection
@@ -89,13 +98,12 @@ OneSync is a bidirectional OneDrive sync manager for Unraid, built on the mainta
 
 ## Quick Deployment
 
-Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.7`
+Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.8`
 
 Required settings:
 
 - `GRAPH_CLIENT_ID`: Entra application client ID
 - `GRAPH_TENANT_ID`: tenant ID or domain
-- `ONESYNC_ADMIN_TOKEN`: random admin token with at least 16 characters
 - `ONESYNC_ALLOWED_HOSTS`: allowed Unraid IP addresses or hostnames
 
 Persistent paths:

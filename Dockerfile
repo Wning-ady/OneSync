@@ -1,3 +1,13 @@
+FROM node:22-alpine AS frontend-builder
+
+WORKDIR /frontend
+COPY frontend/package.json frontend/package-lock.json ./
+RUN npm ci --ignore-scripts
+COPY frontend ./
+COPY app/static/favicon.ico app/static/onesync-logo.png \
+    app/static/donate-alipay-qr.png app/static/donate-wechat-qr.png ./public/
+RUN npm run build
+
 ARG ONEDRIVE_BASE_DIGEST=sha256:263a90247b1106d1f0df3b541ed01a45d0c63837cba40e50108b0d80222541ae
 FROM driveone/onedrive:edge@${ONEDRIVE_BASE_DIGEST} AS python-builder
 
@@ -16,6 +26,7 @@ RUN python3 -m venv /opt/onesync \
 FROM python-builder AS test
 
 WORKDIR /src
+COPY --from=frontend-builder /frontend/dist /tmp/frontend-dist
 COPY requirements-dev.lock /tmp/requirements-dev.lock
 RUN /opt/onesync/bin/python -m pip install \
         --no-cache-dir \
@@ -35,7 +46,7 @@ RUN rm -f /opt/onesync/bin/pip /opt/onesync/bin/pip3 /opt/onesync/bin/pip3.* \
 
 FROM driveone/onedrive:edge@${ONEDRIVE_BASE_DIGEST}
 
-ARG APP_VERSION=0.1.7
+ARG APP_VERSION=0.1.8
 
 USER root
 RUN apt-get update \
@@ -46,6 +57,7 @@ RUN apt-get update \
 WORKDIR /app
 COPY --from=python-runtime /opt/onesync /opt/onesync
 COPY app ./app
+COPY --from=frontend-builder /frontend/dist ./app/static
 RUN chmod -R a+rX /app/app
 COPY docker/entrypoint.sh /usr/local/bin/onesync
 RUN chmod 0755 /usr/local/bin/onesync

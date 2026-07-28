@@ -9,7 +9,6 @@
   <Icon>https://raw.githubusercontent.com/Wning-ady/OneSync/main/docs/assets/onesync-logo.png</Icon>
   <Config Name="配置目录" Target="/onedrive/conf" Default="/mnt/user/appdata/onesync" Mode="rw" Description="保存授权、范围、通知和变更记录" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/onesync</Config>
   <Config Name="同步目录" Target="/onedrive/data" Default="/mnt/user/onedrive" Mode="rw" Description="选择同步到 Unraid 的真实文件" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/onedrive</Config>
-  <Config Name="ONESYNC_ADMIN_TOKEN" Target="ONESYNC_ADMIN_TOKEN" Default="" Mode="" Description="OneSync 管理口令，至少 16 个字符；请使用随机值并妥善保管" Type="Variable" Display="always" Required="true" Mask="true"></Config>
   <Config Name="ONESYNC_ALLOWED_HOSTS" Target="ONESYNC_ALLOWED_HOSTS" Default="192.168.2.21,127.0.0.1,localhost" Mode="" Description="允许访问管理服务的 Host 名称或地址，逗号分隔" Type="Variable" Display="advanced" Required="true" Mask="false">192.168.2.21,127.0.0.1,localhost</Config>
   <Config Name="GRAPH_CLIENT_ID" Target="GRAPH_CLIENT_ID" Default="" Mode="" Description="单租户 Entra 应用 Client ID" Type="Variable" Display="always" Required="true" Mask="false"></Config>
   <Config Name="GRAPH_TENANT_ID" Target="GRAPH_TENANT_ID" Default="5dldn8.onmicrosoft.com" Mode="" Description="Microsoft Entra 租户" Type="Variable" Display="always" Required="true" Mask="false">5dldn8.onmicrosoft.com</Config>
