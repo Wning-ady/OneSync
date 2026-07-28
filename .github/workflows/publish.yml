@@ -60,10 +60,11 @@ jobs:
       - name: Lint Dockerfile
         run: |
           docker run --rm \
+            --entrypoint /bin/hadolint \
             --volume "$GITHUB_WORKSPACE:/repo:ro" \
             --workdir /repo \
             "$HADOLINT_IMAGE" \
-            hadolint --failure-threshold error Dockerfile
+            --failure-threshold error Dockerfile
 
       - name: Scan source and locked dependencies
         run: |
