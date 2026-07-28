@@ -6,6 +6,10 @@
 
 OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活跃的 `abraunegg/onedrive`。它提供浏览器管理页、设备代码授权、文件夹范围选择、单次同步、持续同步、受控重同步、中文日志和企业微信通知。
 
+## v0.1.11 空闲传输状态修复
+
+- 空闲时不再把未提供的待下载数量显示为 `null`
+
 ## v0.1.10 HTTP 授权码复制修复
 
 - 为非 HTTPS 的 Unraid 管理页增加浏览器兼容复制回退和清晰结果提示
@@ -49,7 +53,7 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 ## 快速部署
 
-镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.10`
+镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.11`
 
 必填配置：
 
@@ -70,6 +74,10 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 ---
 
 OneSync is a bidirectional OneDrive sync manager for Unraid, built on the maintained `abraunegg/onedrive` client. It provides a browser UI, device-code authorization, selective folder sync, one-shot and continuous sync, controlled resync, logs, and WeCom notifications.
+
+## v0.1.11 Idle Transfer Status Fix
+
+- Do not render an unavailable pending-download count as `null` while the engine is idle
 
 ## v0.1.10 HTTP Device-code Copy Fix
 
@@ -114,7 +122,7 @@ OneSync is a bidirectional OneDrive sync manager for Unraid, built on the mainta
 
 ## Quick Deployment
 
-Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.10`
+Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.11`
 
 Required settings:
 
