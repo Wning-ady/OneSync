@@ -71,8 +71,26 @@ function toneForLog(line: string) {
   return "plain";
 }
 
-function copy(value: string) {
-  navigator.clipboard?.writeText(value).catch(() => undefined);
+async function copy(value: string): Promise<boolean> {
+  if (navigator.clipboard && window.isSecureContext) {
+    try {
+      await navigator.clipboard.writeText(value);
+      return true;
+    } catch {
+      // HTTP management pages require the legacy user-gesture fallback below.
+    }
+  }
+
+  const field = document.createElement("textarea");
+  field.value = value;
+  field.setAttribute("readonly", "");
+  field.style.cssText = "position:fixed;top:-9999px;left:-9999px;opacity:0";
+  document.body.appendChild(field);
+  field.select();
+  field.setSelectionRange(0, value.length);
+  const copied = document.execCommand("copy");
+  field.remove();
+  return copied;
 }
 
 function App() {
@@ -276,7 +294,15 @@ function Nav({ icon, label, active, onClick }: { icon: React.ReactNode; label: s
 function ActionButton({ icon, label, primary, danger, disabled, onClick }: { icon: React.ReactNode; label: string; primary?: boolean; danger?: boolean; disabled?: boolean; onClick: () => void }) { return <button className={`action-button ${primary ? "primary" : ""} ${danger ? "danger" : ""}`} disabled={disabled} onClick={onClick}>{icon}{label}</button>; }
 function Meta({ label, value }: { label: string; value: string }) { return <div><span>{label}</span><strong>{value}</strong></div>; }
 function ToggleRow({ label, detail, checked, onChange }: { label: string; detail: string; checked: boolean; onChange: (checked: boolean) => void }) { return <label className="toggle-row"><div><strong>{label}</strong><span>{detail}</span></div><input type="checkbox" checked={checked} onChange={event => onChange(event.target.checked)} /><i aria-hidden="true" /></label>; }
-function DeviceDialog({ title, auth, onClose }: { title: string; auth?: SyncAuth; onClose: () => void }) { const code = auth?.userCode || ""; return <div className="modal-backdrop" role="presentation"><section className="modal" role="dialog" aria-modal="true" aria-label={title}><button className="modal-close" onClick={onClose}><X size={18} /></button><span className="label">MICROSOFT DEVICE CODE</span><h2>{title}</h2><p>{auth?.message || "请完成 Microsoft 授权。"}</p><button className="device-code" disabled={!code} onClick={() => copy(code)}>{code || "等待授权码"}<Copy size={18} /></button><div className="form-actions"><a className={`primary-button ${auth?.verificationUri ? "" : "disabled"}`} href={auth?.verificationUri} target="_blank" rel="noreferrer">打开登录页</a><button className="quiet-button" disabled={!code} onClick={() => copy(code)}>复制代码</button></div></section></div>; }
+function DeviceDialog({ title, auth, onClose }: { title: string; auth?: SyncAuth; onClose: () => void }) {
+  const code = auth?.userCode || "";
+  const [copyMessage, setCopyMessage] = useState("");
+  const copyCode = async () => {
+    const copied = code && await copy(code);
+    setCopyMessage(copied ? "授权码已复制" : "复制失败，请手动选择代码");
+  };
+  return <div className="modal-backdrop" role="presentation"><section className="modal" role="dialog" aria-modal="true" aria-label={title}><button className="modal-close" onClick={onClose}><X size={18} /></button><span className="label">MICROSOFT DEVICE CODE</span><h2>{title}</h2><p>{auth?.message || "请完成 Microsoft 授权。"}</p><button className="device-code" disabled={!code} aria-label="复制授权码" onClick={() => void copyCode()}>{code || "等待授权码"}<Copy size={18} /></button><div className="form-actions"><a className={`primary-button ${auth?.verificationUri ? "" : "disabled"}`} href={auth?.verificationUri} target="_blank" rel="noreferrer">打开登录页</a><button className="quiet-button" disabled={!code} onClick={() => void copyCode()}>{copyMessage || "复制代码"}</button></div>{copyMessage && <p className="copy-status" role="status">{copyMessage}</p>}</section></div>;
+}
 function FolderTree({ items, folders, open, selected, onToggle, onChoose, busy }: { items: FolderItem[]; folders: Record<string, FolderItem[]>; open: Set<string>; selected: Set<string>; onToggle: (item: FolderItem) => void; onChoose: (item: FolderItem, checked: boolean) => void; busy: string }) { return <ul className="folder-tree">{items.map(item => <li key={item.id}><div className="folder-row"><button className="chevron" onClick={() => void onToggle(item)} aria-label={`展开 ${item.name}`}>{busy === `folder:${item.id}` ? <LoaderCircle className="spin" size={15} /> : open.has(item.id) ? <ChevronDown size={17} /> : <ChevronRight size={17} />}</button><input id={`folder-${item.id}`} type="checkbox" checked={selected.has(item.path)} onChange={event => onChoose(item, event.target.checked)} /><label htmlFor={`folder-${item.id}`}><Folder size={16} /><span>{item.name}</span><small>{item.path}</small></label></div>{open.has(item.id) && folders[item.id] && <FolderTree items={folders[item.id]} folders={folders} open={open} selected={selected} onToggle={onToggle} onChoose={onChoose} busy={busy} />}</li>)}</ul>; }
 
 createRoot(document.getElementById("root")!).render(<App />);
