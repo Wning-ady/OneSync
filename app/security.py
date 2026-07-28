@@ -1,67 +1,11 @@
 from __future__ import annotations
 
-import hmac
-import secrets
 import time
 from collections import defaultdict, deque
-from dataclasses import dataclass
 from urllib.parse import urlsplit
 
 
-SESSION_COOKIE = "onesync_session"
 SAFE_METHODS = {"GET", "HEAD", "OPTIONS"}
-
-
-@dataclass(frozen=True)
-class Session:
-    csrf_token: str
-    expires_at: float
-
-
-class SessionManager:
-    def __init__(self, admin_token: str, ttl_seconds: int = 12 * 60 * 60) -> None:
-        self.admin_token = admin_token
-        self.ttl_seconds = ttl_seconds
-        self.sessions: dict[str, Session] = {}
-
-    @property
-    def configured(self) -> bool:
-        return len(self.admin_token) >= 16
-
-    def login(self, token: str) -> tuple[str, Session] | None:
-        if not self.configured or not hmac.compare_digest(token, self.admin_token):
-            return None
-        now = time.time()
-        self.sessions = {
-            session_id: session
-            for session_id, session in self.sessions.items()
-            if session.expires_at > now
-        }
-        if len(self.sessions) >= 256:
-            oldest = min(self.sessions, key=lambda item: self.sessions[item].expires_at)
-            self.sessions.pop(oldest, None)
-        session_id = secrets.token_urlsafe(32)
-        session = Session(
-            csrf_token=secrets.token_urlsafe(32),
-            expires_at=now + self.ttl_seconds,
-        )
-        self.sessions[session_id] = session
-        return session_id, session
-
-    def get(self, session_id: str | None) -> Session | None:
-        if not session_id:
-            return None
-        session = self.sessions.get(session_id)
-        if not session:
-            return None
-        if session.expires_at <= time.time():
-            self.sessions.pop(session_id, None)
-            return None
-        return session
-
-    def logout(self, session_id: str | None) -> None:
-        if session_id:
-            self.sessions.pop(session_id, None)
 
 
 class RateLimiter:

@@ -3,7 +3,8 @@ set -eu
 
 mkdir -p "${APP_CONFIG_DIR}" "${ONEDRIVE_DATA_DIR}"
 chown "${PUID}:${PGID}" "${APP_CONFIG_DIR}" "${ONEDRIVE_DATA_DIR}"
-chmod 700 "${APP_CONFIG_DIR}"
+chmod 777 "${APP_CONFIG_DIR}" "${ONEDRIVE_DATA_DIR}"
+umask 000
 
 exec setpriv \
     --reuid="${PUID}" \

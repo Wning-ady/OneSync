@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import asyncio
-import hmac
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -18,9 +17,7 @@ from .notifications import NotificationError, NotificationManager
 from .selection import SelectionStore
 from .security import (
     SAFE_METHODS,
-    SESSION_COOKIE,
     RateLimiter,
-    SessionManager,
     host_is_allowed,
     origin_matches_host,
 )
@@ -47,17 +44,12 @@ class NotificationRequest(BaseModel):
     events: dict[str, bool] = Field(default_factory=dict)
 
 
-class LoginRequest(BaseModel):
-    token: str = Field(min_length=1, max_length=4096)
-
-
 def create_app(settings: Settings | None = None) -> FastAPI:
     settings = settings or Settings.from_environment()
     sync = SyncManager(settings.config_dir, settings.data_dir)
     graph = GraphClient(settings.graph_client_id, settings.graph_tenant_id, settings.config_dir / "graph-tokens.json")
     selection = SelectionStore(settings.config_dir / "sync_list")
     notifications = NotificationManager(settings.config_dir / "notifications.json")
-    sessions = SessionManager(settings.admin_token)
     rate_limiter = RateLimiter()
 
     @asynccontextmanager
@@ -130,9 +122,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
         client = request.client.host if request.client else "unknown"
         bucket, limit, window = "api", 240, 60
-        if request.url.path == "/api/auth/login":
-            bucket, limit, window = "login", 5, 300
-        elif request.method not in SAFE_METHODS:
+        if request.method not in SAFE_METHODS:
             bucket, limit, window = "control", 30, 60
         allowed, retry_after = rate_limiter.allow(client, bucket, limit, window)
         if not allowed:
@@ -142,20 +132,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 headers={"Retry-After": str(retry_after)},
             )
 
-        public_paths = {
-            "/api/health",
-            "/api/auth/login",
-            "/api/auth/session",
-        }
-        session_id = request.cookies.get(SESSION_COOKIE)
-        session = sessions.get(session_id)
-        request.state.onesync_session = session
-        if request.url.path not in public_paths and not session:
-            return JSONResponse({"detail": "请先登录 OneSync 管理页面。"}, status_code=401)
-        if request.url.path not in public_paths and request.method not in SAFE_METHODS:
-            csrf = request.headers.get("x-csrf-token", "")
-            if not session or not hmac.compare_digest(csrf, session.csrf_token):
-                return JSONResponse({"detail": "安全校验已失效，请刷新页面后重试。"}, status_code=403)
         return await call_next(request)
 
     @app.middleware("http")
@@ -175,47 +151,6 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
         if request.url.path.startswith("/api/"):
             response.headers["Cache-Control"] = "no-store"
-        return response
-
-    @app.post("/api/auth/login")
-    async def login(request: Request, credentials: LoginRequest) -> JSONResponse:
-        if not sessions.configured:
-            return JSONResponse(
-                {"detail": "ONESYNC_ADMIN_TOKEN 必须至少包含 16 个字符。"},
-                status_code=503,
-            )
-        result = sessions.login(credentials.token)
-        if not result:
-            return JSONResponse({"detail": "管理口令不正确。"}, status_code=401)
-        session_id, session = result
-        response = JSONResponse({"authenticated": True, "csrfToken": session.csrf_token})
-        response.set_cookie(
-            SESSION_COOKIE,
-            session_id,
-            max_age=sessions.ttl_seconds,
-            httponly=True,
-            secure=settings.cookie_secure or request.url.scheme == "https",
-            samesite="strict",
-            path="/",
-        )
-        return response
-
-    @app.get("/api/auth/session")
-    async def auth_session(request: Request) -> dict[str, object]:
-        session = request.state.onesync_session
-        if not session:
-            return {"authenticated": False, "configured": sessions.configured}
-        return {
-            "authenticated": True,
-            "configured": True,
-            "csrfToken": session.csrf_token,
-        }
-
-    @app.post("/api/auth/logout")
-    async def logout(request: Request) -> JSONResponse:
-        sessions.logout(request.cookies.get(SESSION_COOKIE))
-        response = JSONResponse({"authenticated": False})
-        response.delete_cookie(SESSION_COOKIE, path="/", samesite="strict")
         return response
 
     def bad_request(error: Exception) -> HTTPException:
@@ -238,12 +173,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         )
 
     @app.get("/api/health")
-    async def health(request: Request) -> dict[str, object]:
-        if not request.state.onesync_session:
-            return {
-                "ok": True,
-                "version": os.environ.get("ONESYNC_VERSION", "dev"),
-            }
+    async def health() -> dict[str, object]:
         # Health must stay local and fast. Graph reachability is refreshed by its
         # dedicated endpoint so a slow Microsoft request never freezes the UI.
         graph_status = graph.auth_status()
