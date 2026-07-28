@@ -139,6 +139,15 @@ docker compose build
 docker compose up
 ```
 
+## 支持项目
+
+如果 OneSync 对你有帮助，欢迎扫码支持后续维护。
+
+<div align="center">
+  <img src="assets/support/wechat-pay.png" width="220" alt="微信收款码">
+  <img src="assets/support/alipay.png" width="220" alt="支付宝收款码">
+</div>
+
 ## 许可
 
 未指定许可证前，保留全部权利。
