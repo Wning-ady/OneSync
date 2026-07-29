@@ -253,8 +253,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     async def sync_once() -> dict[str, object]:
         if not scope_is_configured(settings, selection):
             raise HTTPException(status_code=422, detail="Sync scope is not configured. Save at least one folder and retry.")
+        runtime_state = read_json(settings.config_dir / "manager-state.json", {})
+        resume_monitor = bool(
+            isinstance(runtime_state, dict) and runtime_state.get("monitor_enabled")
+        )
         await sync.stop()
-        await sync.start("once")
+        await sync.start("once", resume_monitor=resume_monitor)
         return sync.status()
 
     @app.post("/api/sync/stop")

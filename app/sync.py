@@ -51,6 +51,7 @@ class SyncManager:
     authorization_code: str = ""
     authorization_message: str = ""
     _stopping: bool = False
+    _resume_monitor_after_once: bool = False
 
     def _event_path(self) -> Path:
         return self.config_dir / "change-events.jsonl"
@@ -218,6 +219,7 @@ class SyncManager:
 
     async def _consume_output(self, process: asyncio.subprocess.Process) -> None:
         assert process.stdout
+        finished_mode = self.mode
         async for line in process.stdout:
             self._append_log(line.decode(errors="replace").rstrip())
         result = await process.wait()
@@ -229,9 +231,21 @@ class SyncManager:
             )
         if result and not self._stopping:
             self._record("system", "engine_exit", status="failed", detail=f"OneDrive exited with code {result}")
-        if self.process is process:
+        is_current_process = self.process is process
+        if is_current_process:
             self.process = None
             self.mode = "stopped"
+        resume_monitor = (
+            is_current_process
+            and finished_mode == "once"
+            and self._resume_monitor_after_once
+            and not self._stopping
+        )
+        if is_current_process:
+            self._resume_monitor_after_once = False
+            if resume_monitor:
+                self.logs.append("One-shot sync finished; restoring continuous monitoring.")
+                await self.start("monitor")
 
     async def _wait_with_logs(self, process: asyncio.subprocess.Process) -> int:
         assert process.stdout
@@ -239,7 +253,7 @@ class SyncManager:
             self._append_log(line.decode(errors="replace").rstrip())
         return await process.wait()
 
-    async def start(self, mode: str = "monitor") -> None:
+    async def start(self, mode: str = "monitor", resume_monitor: bool = False) -> None:
         async with self._lock:
             if self.process and self.process.returncode is None:
                 return
@@ -248,6 +262,7 @@ class SyncManager:
             self.scan_items = None
             self.planned_downloads = None
             self.activity = "正在启动同步引擎"
+            self._resume_monitor_after_once = mode == "once" and resume_monitor
             arguments = ["--monitor"] if mode == "monitor" else ["--sync"]
             self.logs.append("Starting: onedrive " + " ".join(arguments))
             self.process = await asyncio.create_subprocess_exec(

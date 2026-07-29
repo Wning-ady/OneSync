@@ -209,3 +209,67 @@ async def test_reauth_process_exit_is_reported_as_failed(tmp_path) -> None:
     authorization = manager.status()["authorization"]
     assert authorization["state"] == "failed"  # type: ignore[index]
     assert "租户" in authorization["message"]  # type: ignore[index]
+
+
+@pytest.mark.asyncio
+async def test_one_shot_restores_previous_monitor_mode(monkeypatch, tmp_path) -> None:
+    manager = SyncManager(tmp_path / "config", tmp_path / "data")
+    manager.mode = "once"
+    manager._resume_monitor_after_once = True
+    started: list[str] = []
+
+    class Output:
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            raise StopAsyncIteration
+
+    class Process:
+        stdout = Output()
+
+        async def wait(self):
+            return 0
+
+    async def start(mode: str = "monitor", resume_monitor: bool = False) -> None:
+        started.append(mode)
+
+    process = Process()
+    manager.process = process  # type: ignore[assignment]
+    monkeypatch.setattr(manager, "start", start)
+
+    await manager._consume_output(process)  # type: ignore[arg-type]
+
+    assert started == ["monitor"]
+    assert manager._resume_monitor_after_once is False
+    assert any("restoring continuous monitoring" in line for line in manager.logs)
+
+
+@pytest.mark.asyncio
+async def test_stale_reader_does_not_stop_new_monitor(monkeypatch, tmp_path) -> None:
+    manager = SyncManager(tmp_path / "config", tmp_path / "data")
+    manager.mode = "monitor"
+    manager._resume_monitor_after_once = True
+
+    class Output:
+        def __aiter__(self):
+            return self
+
+        async def __anext__(self):
+            raise StopAsyncIteration
+
+    class Process:
+        stdout = Output()
+
+        async def wait(self):
+            return 0
+
+    stale_process = Process()
+    current_process = Process()
+    manager.process = current_process  # type: ignore[assignment]
+
+    await manager._consume_output(stale_process)  # type: ignore[arg-type]
+
+    assert manager.process is current_process
+    assert manager.mode == "monitor"
+    assert manager._resume_monitor_after_once is True
