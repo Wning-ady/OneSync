@@ -6,6 +6,11 @@
 
 OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活跃的 `abraunegg/onedrive`。它提供浏览器管理页、设备代码授权、文件夹范围选择、单次同步、持续同步、受控重同步、中文日志和企业微信通知。
 
+## v0.1.12 网络抗抖与连接恢复
+
+- 针对长下载增加低并发、较长连接/数据等待和短空闲连接复用参数
+- Unraid 部署同步关闭 Realtek `r8169` 网卡 EEE，降低链路抖动导致的下载中断
+
 ## v0.1.11 空闲传输状态修复
 
 - 空闲时不再把未提供的待下载数量显示为 `null`
@@ -53,7 +58,7 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 ## 快速部署
 
-镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.11`
+镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.12`
 
 必填配置：
 
@@ -74,6 +79,11 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 ---
 
 OneSync is a bidirectional OneDrive sync manager for Unraid, built on the maintained `abraunegg/onedrive` client. It provides a browser UI, device-code authorization, selective folder sync, one-shot and continuous sync, controlled resync, logs, and WeCom notifications.
+
+## v0.1.12 Network Resilience
+
+- Add low-concurrency, longer connection/data waits, and shorter idle connection reuse for long downloads
+- The Unraid deployment disables Realtek `r8169` EEE to reduce link flaps that interrupt downloads
 
 ## v0.1.11 Idle Transfer Status Fix
 
@@ -122,7 +132,7 @@ OneSync is a bidirectional OneDrive sync manager for Unraid, built on the mainta
 
 ## Quick Deployment
 
-Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.11`
+Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.12`
 
 Required settings:
 

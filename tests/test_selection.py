@@ -47,5 +47,9 @@ def test_client_config_removes_unsupported_legacy_scope_option(tmp_path: Path) -
     content = (settings.config_dir / "config").read_text()
     assert 'custom_option = "keep"' in content
     assert "sync_list" not in content
-    assert 'threads = "3"' in content
+    assert 'threads = "1"' in content
+    assert 'connect_timeout = "30"' in content
+    assert 'data_timeout = "300"' in content
+    assert 'operation_timeout = "900"' in content
+    assert 'max_curl_idle = "30"' in content
     assert scope_is_configured(settings, store)
