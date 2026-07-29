@@ -28,7 +28,11 @@ def ensure_client_config(settings: Settings) -> None:
         'force_http_11 = "true"',
         'ip_protocol_version = "1"',
         'display_transfer_metrics = "true"',
-        'threads = "3"',
+        'threads = "1"',
+        'connect_timeout = "30"',
+        'data_timeout = "300"',
+        'operation_timeout = "900"',
+        'max_curl_idle = "30"',
     ):
         key = option.split(" =", 1)[0]
         if not re.search(rf"(?m)^\s*{re.escape(key)}\s*=", content):
