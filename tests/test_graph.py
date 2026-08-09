@@ -1,3 +1,4 @@
+import asyncio
 import json
 import time
 
@@ -103,3 +104,27 @@ async def test_connection_check_marks_token_verified(monkeypatch: pytest.MonkeyP
     status = await client.check_connection(force=True)
     assert status["state"] == "authorized"
     assert status["verified"] is True
+
+
+@pytest.mark.asyncio
+async def test_connection_check_uses_longer_timeout(monkeypatch: pytest.MonkeyPatch, tmp_path) -> None:
+    client = GraphClient("client", "tenant", tmp_path / "token.json")
+    client.token_path.write_text(json.dumps({"access_token": "secret"}))
+    observed: dict[str, float] = {}
+
+    async def fake_get(_: str):
+        client.last_verified_at = time.time()
+        return {"id": "drive"}
+
+    original_wait_for = asyncio.wait_for
+
+    async def capture_timeout(awaitable, timeout):
+        observed["timeout"] = timeout
+        return await original_wait_for(awaitable, timeout)
+
+    monkeypatch.setattr(client, "_graph_get", fake_get)
+    monkeypatch.setattr(asyncio, "wait_for", capture_timeout)
+
+    await client.check_connection(force=True)
+
+    assert observed["timeout"] == 20

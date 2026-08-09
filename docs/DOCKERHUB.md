@@ -6,6 +6,12 @@
 
 OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活跃的 `abraunegg/onedrive`。它提供浏览器管理页、设备代码授权、文件夹范围选择、单次同步、持续同步、受控重同步、中文日志和企业微信通知。
 
+## v0.1.14 Graph 通知防打扰
+
+- Graph 探测从每 15 秒降为每分钟一次，单次等待从 8 秒调整为 20 秒
+- 只有连续 3 次探测失败才发送 Graph 掉线通知，同类通知至少间隔 30 分钟
+- 通知事件开关现在生效
+
 ## v0.1.13 持续监控自动恢复
 
 - 在持续同步已启用时手动执行“同步一次”，任务结束后自动恢复持续监控
@@ -63,7 +69,7 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 ## 快速部署
 
-镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.13`
+镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.14`
 
 必填配置：
 
@@ -84,6 +90,12 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 ---
 
 OneSync is a bidirectional OneDrive sync manager for Unraid, built on the maintained `abraunegg/onedrive` client. It provides a browser UI, device-code authorization, selective folder sync, one-shot and continuous sync, controlled resync, logs, and WeCom notifications.
+
+## v0.1.14 Graph Notification Noise Control
+
+- Run Graph probes once per minute instead of every 15 seconds, and extend the single probe wait from 8 to 20 seconds
+- Send a Graph-disconnected notification only after three consecutive failed probes, then apply a 30-minute cooldown for the same event
+- Make notification event toggles effective
 
 ## v0.1.13 Continuous Monitor Restore
 
@@ -142,7 +154,7 @@ OneSync is a bidirectional OneDrive sync manager for Unraid, built on the mainta
 
 ## Quick Deployment
 
-Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.13`
+Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.14`
 
 Required settings:
 

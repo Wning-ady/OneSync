@@ -237,7 +237,7 @@ class GraphClient:
             try:
                 await asyncio.wait_for(
                     self._graph_get("https://graph.microsoft.com/v1.0/me/drive?$select=id"),
-                    timeout=8,
+                    timeout=20,
                 )
             except asyncio.TimeoutError:
                 self._mark_error("Microsoft Graph 响应超时，请检查网络后重试。")

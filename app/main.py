@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import time
 from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Optional
@@ -63,16 +64,20 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             await sync.start("monitor")
         last_event = 0
         graph_was_connected = False
+        graph_failures = 0
+        last_graph_notification_at = 0.0
+
         async def notification_watch() -> None:
-            nonlocal last_event, graph_was_connected
+            nonlocal last_event, graph_was_connected, graph_failures, last_graph_notification_at
             while True:
-                await asyncio.sleep(15)
+                await asyncio.sleep(60)
                 config = notifications.public()
                 if not config["enabled"]:
                     continue
+                enabled_events = config.get("events", {})
                 events = list(sync.events)
                 for event in events[last_event:]:
-                    if event.get("status") in {"failed", "warning"}:
+                    if enabled_events.get("syncError") and event.get("status") in {"failed", "warning"}:
                         try:
                             await notifications.send("sync_error", "warning" if event.get("status") == "warning" else "error", str(event.get("detail") or event.get("action")), {"path": event.get("path", ""), "action": event.get("action", "")})
                         except NotificationError as error:
@@ -80,12 +85,23 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 last_event = len(events)
                 status = await graph.check_connection(force=True)
                 connected = bool(status.get("verified"))
-                if graph_was_connected and not connected:
+                if connected:
+                    graph_was_connected = True
+                    graph_failures = 0
+                    continue
+                if graph_was_connected:
+                    graph_failures += 1
+                if (
+                    enabled_events.get("graphDisconnected")
+                    and graph_was_connected
+                    and graph_failures >= 3
+                    and time.monotonic() - last_graph_notification_at >= 1800
+                ):
                     try:
                         await notifications.send("graph_disconnected", "error", str(status.get("message") or "Microsoft Graph 已断开。"))
+                        last_graph_notification_at = time.monotonic()
                     except NotificationError as error:
                         sync.logs.append(f"Webhook notification failed: {error}")
-                graph_was_connected = connected
         watcher = asyncio.create_task(notification_watch())
         yield
         watcher.cancel()
