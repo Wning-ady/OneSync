@@ -47,11 +47,12 @@ RUN rm -f /opt/onesync/bin/pip /opt/onesync/bin/pip3 /opt/onesync/bin/pip3.* \
 
 FROM driveone/onedrive:edge@${ONEDRIVE_BASE_DIGEST}
 
-ARG APP_VERSION=0.1.15
+ARG APP_VERSION=0.1.16
 
 USER root
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends python3 util-linux \
+    && apt-get install -y --no-install-recommends \
+        libssl3t64 openssl openssl-provider-legacy python3 util-linux \
     && rm -rf /var/lib/apt/lists/* \
     && rm -f /usr/local/bin/gosu
 

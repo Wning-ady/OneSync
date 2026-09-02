@@ -6,6 +6,11 @@
 
 OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活跃的 `abraunegg/onedrive`。它提供浏览器管理页、设备代码授权、文件夹范围选择、单次同步、持续同步、受控重同步、中文日志和企业微信通知。
 
+## v0.1.16 OpenSSL 安全更新
+
+- 镜像构建阶段升级 Debian OpenSSL 包，修复基础镜像中的已知高危漏洞
+- 保留 `ONESYNC_ALLOWED_HOSTS=*` 反向代理 Host 通配支持
+
 ## v0.1.15 反代 Host 通配支持
 
 - `ONESYNC_ALLOWED_HOSTS=*` 可接受任意有效反向代理 Host
@@ -74,7 +79,7 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 ## 快速部署
 
-镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.15`
+镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.16`
 
 必填配置：
 
@@ -95,6 +100,11 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 ---
 
 OneSync is a bidirectional OneDrive sync manager for Unraid, built on the maintained `abraunegg/onedrive` client. It provides a browser UI, device-code authorization, selective folder sync, one-shot and continuous sync, controlled resync, logs, and WeCom notifications.
+
+## v0.1.16 OpenSSL Security Update
+
+- Upgrade Debian OpenSSL packages during the image build to fix a known high-severity vulnerability in the base image
+- Retain `ONESYNC_ALLOWED_HOSTS=*` reverse-proxy Host wildcard support
 
 ## v0.1.15 Reverse-proxy Host Wildcard Support
 
@@ -164,7 +174,7 @@ OneSync is a bidirectional OneDrive sync manager for Unraid, built on the mainta
 
 ## Quick Deployment
 
-Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.15`
+Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.16`
 
 Required settings:
 
