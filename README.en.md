@@ -26,6 +26,8 @@ ONESYNC_BIND_ADDRESS=192.168.2.21
 ONESYNC_ALLOWED_HOSTS=192.168.2.21,127.0.0.1,localhost
 ```
 
+To accept any reverse-proxy hostname, set `ONESYNC_ALLOWED_HOSTS=*`. This only relaxes Host validation; same-origin validation still applies to write operations.
+
 Then use:
 
 ```yaml

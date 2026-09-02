@@ -15,7 +15,7 @@
 OneSync 使用维护活跃的 [`abraunegg/onedrive`](https://github.com/abraunegg/onedrive) 客户端同步真实本地文件，不使用 rclone FUSE 虚拟挂载。你可以在浏览器中选择 OneDrive 文件夹，文件会落盘到 Unraid；需要时手动执行一次同步即可上传本地改动、下载云端改动。
 
 > [!IMPORTANT]
-> OneSync 不再内置管理口令，默认只将 `8098` 绑定到 Unraid 的 LAN 地址。不要把端口转发到公网；通过反向代理访问时，请在网络边界配置访问控制、TLS，并把代理域名加入 `ONESYNC_ALLOWED_HOSTS`。
+> OneSync 不再内置管理口令，默认只将 `8098` 绑定到 Unraid 的 LAN 地址。不要把端口转发到公网；通过反向代理访问时，请在网络边界配置访问控制、TLS，并把代理域名加入 `ONESYNC_ALLOWED_HOSTS`。若反向代理入口较多，可设置 `ONESYNC_ALLOWED_HOSTS=*` 接受任意有效 Host；写操作仍要求 Origin 与 Host 同源。
 
 ## 功能亮点
 
@@ -36,6 +36,8 @@ OneSync 使用维护活跃的 [`abraunegg/onedrive`](https://github.com/abrauneg
 ONESYNC_BIND_ADDRESS=192.168.2.21
 ONESYNC_ALLOWED_HOSTS=192.168.2.21,127.0.0.1,localhost
 ```
+
+如需让任意反向代理域名访问，可改为 `ONESYNC_ALLOWED_HOSTS=*`。该值仅放宽 Host 校验，不会关闭写操作的同源校验。
 
 不要把 `.env` 或 `docker compose config` 的输出提交到 Git。然后使用下面的配置，并将 `GRAPH_CLIENT_ID` 与 `GRAPH_TENANT_ID` 替换为自己的 Entra 应用信息。
 

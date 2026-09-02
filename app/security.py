@@ -36,7 +36,8 @@ def host_is_allowed(host_header: str, configured_hosts: tuple[str, ...]) -> bool
     if not hostname:
         return False
     hostname = hostname.rstrip(".").lower()
-    return hostname in {host.rstrip(".").lower() for host in configured_hosts}
+    allowed_hosts = {host.rstrip(".").lower() for host in configured_hosts}
+    return "*" in allowed_hosts or hostname in allowed_hosts
 
 
 def origin_matches_host(origin: str, host_header: str, request_scheme: str) -> bool:

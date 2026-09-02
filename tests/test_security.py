@@ -1,6 +1,7 @@
 from fastapi.testclient import TestClient
 
 from app.main import create_app
+from app.security import host_is_allowed
 from app.settings import Settings
 
 
@@ -65,3 +66,10 @@ def test_environment_allowed_hosts_are_explicit(monkeypatch) -> None:
         "192.168.2.21",
         "unraid.example",
     )
+
+
+def test_wildcard_allows_any_valid_host() -> None:
+    assert host_is_allowed("onesync.example.com", ("*",))
+    assert host_is_allowed("192.168.2.21:8098", ("*",))
+    assert host_is_allowed("[2001:db8::1]:8098", ("*",))
+    assert not host_is_allowed("", ("*",))

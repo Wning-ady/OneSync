@@ -6,6 +6,11 @@
 
 OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活跃的 `abraunegg/onedrive`。它提供浏览器管理页、设备代码授权、文件夹范围选择、单次同步、持续同步、受控重同步、中文日志和企业微信通知。
 
+## v0.1.15 反代 Host 通配支持
+
+- `ONESYNC_ALLOWED_HOSTS=*` 可接受任意有效反向代理 Host
+- 写操作继续执行 Origin 与 Host 同源校验
+
 ## v0.1.14 Graph 通知防打扰
 
 - Graph 探测从每 15 秒降为每分钟一次，单次等待从 8 秒调整为 20 秒
@@ -69,13 +74,13 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 ## 快速部署
 
-镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.14`
+镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.15`
 
 必填配置：
 
 - `GRAPH_CLIENT_ID`：Entra 应用 Client ID
 - `GRAPH_TENANT_ID`：租户 ID 或域名
-- `ONESYNC_ALLOWED_HOSTS`：允许访问的 Unraid IP 或域名
+- `ONESYNC_ALLOWED_HOSTS`：允许访问的 Unraid IP 或域名；设为 `*` 可接受任意有效 Host
 
 持久化目录：
 
@@ -90,6 +95,11 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 ---
 
 OneSync is a bidirectional OneDrive sync manager for Unraid, built on the maintained `abraunegg/onedrive` client. It provides a browser UI, device-code authorization, selective folder sync, one-shot and continuous sync, controlled resync, logs, and WeCom notifications.
+
+## v0.1.15 Reverse-proxy Host Wildcard Support
+
+- `ONESYNC_ALLOWED_HOSTS=*` accepts any valid reverse-proxy Host
+- Write operations still enforce same-origin Origin/Host validation
 
 ## v0.1.14 Graph Notification Noise Control
 
@@ -154,13 +164,13 @@ OneSync is a bidirectional OneDrive sync manager for Unraid, built on the mainta
 
 ## Quick Deployment
 
-Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.14`
+Image: `docker.io/waning/onesync:latest` or `docker.io/waning/onesync:0.1.15`
 
 Required settings:
 
 - `GRAPH_CLIENT_ID`: Entra application client ID
 - `GRAPH_TENANT_ID`: tenant ID or domain
-- `ONESYNC_ALLOWED_HOSTS`: allowed Unraid IP addresses or hostnames
+- `ONESYNC_ALLOWED_HOSTS`: allowed Unraid IP addresses or hostnames; set it to `*` to accept any valid Host
 
 Persistent paths:
 
