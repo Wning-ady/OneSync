@@ -35,6 +35,7 @@ OneSync 使用维护活跃的 [`abraunegg/onedrive`](https://github.com/abrauneg
 ```dotenv
 ONESYNC_BIND_ADDRESS=192.168.2.21
 ONESYNC_ALLOWED_HOSTS=192.168.2.21,127.0.0.1,localhost
+ONESYNC_FORWARDED_ALLOW_IPS=127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10
 ```
 
 如需让任意反向代理域名访问，可改为 `ONESYNC_ALLOWED_HOSTS=*`。该值仅放宽 Host 校验，不会关闭写操作的同源校验。
@@ -53,6 +54,7 @@ services:
       GRAPH_CLIENT_ID: replace-with-your-entra-client-id
       GRAPH_TENANT_ID: replace-with-your-tenant-id-or-domain
       ONESYNC_ALLOWED_HOSTS: ${ONESYNC_ALLOWED_HOSTS:-192.168.2.21,127.0.0.1,localhost}
+      ONESYNC_FORWARDED_ALLOW_IPS: ${ONESYNC_FORWARDED_ALLOW_IPS:-127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10}
     ports:
       - "${ONESYNC_BIND_ADDRESS:-192.168.2.21}:8098:8098"
     volumes:
@@ -65,8 +67,9 @@ services:
 
 - `/mnt/user/appdata/onesync:/onedrive/conf`：数据库、同步设置与 OAuth refresh token。
 - `/mnt/user/onedrive:/onedrive/data`：OneDrive 真实文件副本。
+- `ONESYNC_FORWARDED_ALLOW_IPS`：反向代理来源地址或网段，用于正确识别代理终止的 HTTPS；只填写实际可信代理，不要无条件使用 `*`。
 
-使用仓库中的 `unraid/onesync.xml` 时，无需填写管理口令。模板通过 `ExtraParams` 仅绑定 `192.168.2.21:8098`，因此不要再添加同名 Port 配置，否则会重新产生 `0.0.0.0:8098` 监听。若 Unraid 地址不同，请同时修改 XML 的 `ExtraParams`、`WebUI` 访问地址和 `ONESYNC_ALLOWED_HOSTS`。
+使用仓库中的 `unraid/onesync.xml` 时，无需填写管理口令。模板通过 `ExtraParams` 仅绑定指定的 Unraid LAN 地址，因此不要再添加同名 Port 配置，否则会重新产生 `0.0.0.0:8098` 监听。若 Unraid 地址不同，请同时修改 XML 的 `ExtraParams`、`WebUI` 访问地址、`ONESYNC_ALLOWED_HOSTS` 和 `ONESYNC_FORWARDED_ALLOW_IPS`。反向代理还必须保留 `Host` 和 `X-Forwarded-Proto`。
 
 建议在 Unraid 的 `DOCKER-USER` 防火墙链中只允许管理网段访问 TCP `8098`，并拒绝 WAN、Tailscale 非 LAN 来源和 IPv6。端口绑定限制目标地址，防火墙限制来源地址，两层应同时保留。
 

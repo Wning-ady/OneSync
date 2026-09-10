@@ -24,6 +24,7 @@ Create a `.env` file in the Unraid Compose Manager project directory. Never comm
 ```dotenv
 ONESYNC_BIND_ADDRESS=192.168.2.21
 ONESYNC_ALLOWED_HOSTS=192.168.2.21,127.0.0.1,localhost
+ONESYNC_FORWARDED_ALLOW_IPS=127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10
 ```
 
 To accept any reverse-proxy hostname, set `ONESYNC_ALLOWED_HOSTS=*`. This only relaxes Host validation; same-origin validation still applies to write operations.
@@ -42,6 +43,7 @@ services:
       GRAPH_CLIENT_ID: replace-with-your-entra-client-id
       GRAPH_TENANT_ID: 5dldn8.onmicrosoft.com
       ONESYNC_ALLOWED_HOSTS: ${ONESYNC_ALLOWED_HOSTS:-192.168.2.21,127.0.0.1,localhost}
+      ONESYNC_FORWARDED_ALLOW_IPS: ${ONESYNC_FORWARDED_ALLOW_IPS:-127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10}
     ports:
       - "${ONESYNC_BIND_ADDRESS:-192.168.2.21}:8098:8098"
     volumes:
@@ -52,7 +54,9 @@ services:
 
 Open `http://192.168.2.21:8098` directly. The container sets both mounted root directories to `drwxrwxrwx` so Unraid, SMB, and the sync process can access them. The default port mapping listens only on the configured LAN address, not `0.0.0.0`.
 
-For DockerMan, import `unraid/onesync.xml` and do not add a second Port entry for `8098`. The XML uses `ExtraParams` to bind `192.168.2.21:8098`. If the Unraid address differs, update that binding and `ONESYNC_ALLOWED_HOSTS` together. Keep a `DOCKER-USER` firewall rule that allows only the management LAN and rejects WAN, non-LAN Tailscale sources, and IPv6.
+`ONESYNC_FORWARDED_ALLOW_IPS` lists trusted reverse-proxy source addresses or networks used to recognize HTTPS terminated by a proxy. List only actual proxy sources and do not use `*` unconditionally. The proxy must preserve `Host` and `X-Forwarded-Proto`.
+
+For DockerMan, import `unraid/onesync.xml` and do not add a second Port entry for `8098`. The XML uses `ExtraParams` to bind the configured Unraid LAN address. If the Unraid address differs, update that binding, `ONESYNC_ALLOWED_HOSTS`, and `ONESYNC_FORWARDED_ALLOW_IPS` together. Keep a `DOCKER-USER` firewall rule that allows only the management LAN and rejects WAN, non-LAN Tailscale sources, and IPv6.
 
 ### Deployment rollback
 

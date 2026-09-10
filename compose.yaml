@@ -9,6 +9,7 @@ services:
       GRAPH_CLIENT_ID: replace-with-your-entra-client-id
       GRAPH_TENANT_ID: 5dldn8.onmicrosoft.com
       ONESYNC_ALLOWED_HOSTS: ${ONESYNC_ALLOWED_HOSTS:-192.168.2.21,127.0.0.1,localhost}
+      ONESYNC_FORWARDED_ALLOW_IPS: ${ONESYNC_FORWARDED_ALLOW_IPS:-127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10}
     ports:
       - "${ONESYNC_BIND_ADDRESS:-192.168.2.21}:8098:8098"
     volumes:

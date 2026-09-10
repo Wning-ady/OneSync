@@ -6,6 +6,11 @@
 
 OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活跃的 `abraunegg/onedrive`。它提供浏览器管理页、设备代码授权、文件夹范围选择、单次同步、持续同步、受控重同步、中文日志和企业微信通知。
 
+## v0.1.17 反向代理来源修复
+
+- 修复反向代理终止 HTTPS 时，管理页写请求被误判为跨来源而无法停止或控制同步的问题
+- 增加 `ONESYNC_FORWARDED_ALLOW_IPS`，仅信任显式配置的代理来源并保留 Host、Origin 与跨站请求校验
+
 ## v0.1.16 OpenSSL 安全更新
 
 - 镜像构建阶段升级 Debian OpenSSL 包，修复基础镜像中的已知高危漏洞
@@ -79,13 +84,14 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 ## 快速部署
 
-镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.16`
+镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.17`
 
 必填配置：
 
 - `GRAPH_CLIENT_ID`：Entra 应用 Client ID
 - `GRAPH_TENANT_ID`：租户 ID 或域名
 - `ONESYNC_ALLOWED_HOSTS`：允许访问的 Unraid IP 或域名；设为 `*` 可接受任意有效 Host
+- `ONESYNC_FORWARDED_ALLOW_IPS`：可信反向代理来源地址或网段；仅填写实际代理来源
 
 持久化目录：
 
@@ -100,6 +106,11 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 ---
 
 OneSync is a bidirectional OneDrive sync manager for Unraid, built on the maintained `abraunegg/onedrive` client. It provides a browser UI, device-code authorization, selective folder sync, one-shot and continuous sync, controlled resync, logs, and WeCom notifications.
+
+## v0.1.17 Reverse-proxy Origin Fix
+
+- Fix management writes being rejected as cross-origin when a reverse proxy terminates HTTPS
+- Add `ONESYNC_FORWARDED_ALLOW_IPS` for explicit trusted proxy sources while retaining Host, Origin, and cross-site request checks
 
 ## v0.1.16 OpenSSL Security Update
 
