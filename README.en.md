@@ -22,8 +22,8 @@ OneSync runs the maintained [`abraunegg/onedrive`](https://github.com/abraunegg/
 Create a `.env` file in the Unraid Compose Manager project directory. Never commit `.env` or `docker compose config` output.
 
 ```dotenv
-ONESYNC_BIND_ADDRESS=192.168.2.21
-ONESYNC_ALLOWED_HOSTS=192.168.2.21,127.0.0.1,localhost
+ONESYNC_BIND_ADDRESS=100.103.237.80
+ONESYNC_ALLOWED_HOSTS=100.103.237.80,one.speedtest.waning.site,127.0.0.1,localhost
 ONESYNC_FORWARDED_ALLOW_IPS=127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10
 ```
 
@@ -42,17 +42,17 @@ services:
       TZ: Asia/Shanghai
       GRAPH_CLIENT_ID: replace-with-your-entra-client-id
       GRAPH_TENANT_ID: 5dldn8.onmicrosoft.com
-      ONESYNC_ALLOWED_HOSTS: ${ONESYNC_ALLOWED_HOSTS:-192.168.2.21,127.0.0.1,localhost}
+      ONESYNC_ALLOWED_HOSTS: ${ONESYNC_ALLOWED_HOSTS:-100.103.237.80,one.speedtest.waning.site,127.0.0.1,localhost}
       ONESYNC_FORWARDED_ALLOW_IPS: ${ONESYNC_FORWARDED_ALLOW_IPS:-127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10}
     ports:
-      - "${ONESYNC_BIND_ADDRESS:-192.168.2.21}:8098:8098"
+      - "${ONESYNC_BIND_ADDRESS:-100.103.237.80}:8098:8098"
     volumes:
       - /mnt/user/appdata/onesync:/onedrive/conf
       - /mnt/user/onedrive:/onedrive/data
     restart: unless-stopped
 ```
 
-Open `http://192.168.2.21:8098` directly. The container sets both mounted root directories to `drwxrwxrwx` so Unraid, SMB, and the sync process can access them. The default port mapping listens only on the configured LAN address, not `0.0.0.0`.
+Open `http://100.103.237.80:8098` directly. The container sets both mounted root directories to `drwxrwxrwx` so Unraid, SMB, and the sync process can access them. The default port mapping listens only on the configured LAN address, not `0.0.0.0`.
 
 `ONESYNC_FORWARDED_ALLOW_IPS` lists trusted reverse-proxy source addresses or networks used to recognize HTTPS terminated by a proxy. List only actual proxy sources and do not use `*` unconditionally. The proxy must preserve `Host` and `X-Forwarded-Proto`.
 

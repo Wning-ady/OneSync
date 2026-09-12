@@ -33,8 +33,8 @@ OneSync 使用维护活跃的 [`abraunegg/onedrive`](https://github.com/abrauneg
 在 Unraid Compose Manager 中新建项目。先在项目目录创建 `.env`：
 
 ```dotenv
-ONESYNC_BIND_ADDRESS=192.168.2.21
-ONESYNC_ALLOWED_HOSTS=192.168.2.21,127.0.0.1,localhost
+ONESYNC_BIND_ADDRESS=100.103.237.80
+ONESYNC_ALLOWED_HOSTS=100.103.237.80,one.speedtest.waning.site,127.0.0.1,localhost
 ONESYNC_FORWARDED_ALLOW_IPS=127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10
 ```
 
@@ -53,17 +53,17 @@ services:
       TZ: Asia/Shanghai
       GRAPH_CLIENT_ID: replace-with-your-entra-client-id
       GRAPH_TENANT_ID: replace-with-your-tenant-id-or-domain
-      ONESYNC_ALLOWED_HOSTS: ${ONESYNC_ALLOWED_HOSTS:-192.168.2.21,127.0.0.1,localhost}
+      ONESYNC_ALLOWED_HOSTS: ${ONESYNC_ALLOWED_HOSTS:-100.103.237.80,one.speedtest.waning.site,127.0.0.1,localhost}
       ONESYNC_FORWARDED_ALLOW_IPS: ${ONESYNC_FORWARDED_ALLOW_IPS:-127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10}
     ports:
-      - "${ONESYNC_BIND_ADDRESS:-192.168.2.21}:8098:8098"
+      - "${ONESYNC_BIND_ADDRESS:-100.103.237.80}:8098:8098"
     volumes:
       - /mnt/user/appdata/onesync:/onedrive/conf
       - /mnt/user/onedrive:/onedrive/data
     restart: unless-stopped
 ```
 
-启动后打开 `http://192.168.2.21:8098` 即可使用。Compose Manager 用户需要确认 `PROJECTS_FOLDER` 与项目路径一致，并保留两个挂载。容器会将两个挂载根目录设为 `drwxrwxrwx`：
+启动后打开 `http://100.103.237.80:8098` 即可使用。Compose Manager 用户需要确认 `PROJECTS_FOLDER` 与项目路径一致，并保留两个挂载。容器会将两个挂载根目录设为 `drwxrwxrwx`：
 
 - `/mnt/user/appdata/onesync:/onedrive/conf`：数据库、同步设置与 OAuth refresh token。
 - `/mnt/user/onedrive:/onedrive/data`：OneDrive 真实文件副本。

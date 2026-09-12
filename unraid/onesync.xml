@@ -4,12 +4,12 @@
   <Repository>waning/onesync:latest</Repository>
   <Registry>https://hub.docker.com/r/waning/onesync</Registry>
   <Network>bridge</Network>
-  <ExtraParams>--publish 192.168.2.21:8098:8098</ExtraParams>
+  <ExtraParams>--publish 100.103.237.80:8098:8098</ExtraParams>
   <WebUI>http://[IP]:8098/</WebUI>
   <Icon>https://raw.githubusercontent.com/Wning-ady/OneSync/main/docs/assets/onesync-logo.png</Icon>
   <Config Name="配置目录" Target="/onedrive/conf" Default="/mnt/user/appdata/onesync" Mode="rw" Description="保存授权、范围、通知和变更记录" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/onesync</Config>
   <Config Name="同步目录" Target="/onedrive/data" Default="/mnt/user/onedrive" Mode="rw" Description="选择同步到 Unraid 的真实文件" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/onedrive</Config>
-  <Config Name="ONESYNC_ALLOWED_HOSTS" Target="ONESYNC_ALLOWED_HOSTS" Default="192.168.2.21,127.0.0.1,localhost" Mode="" Description="允许访问管理服务的 Host 名称或地址，逗号分隔；填写 * 接受任意有效 Host" Type="Variable" Display="advanced" Required="true" Mask="false">192.168.2.21,127.0.0.1,localhost</Config>
+  <Config Name="ONESYNC_ALLOWED_HOSTS" Target="ONESYNC_ALLOWED_HOSTS" Default="100.103.237.80,one.speedtest.waning.site,127.0.0.1,localhost" Mode="" Description="允许访问管理服务的 Host 名称或地址，逗号分隔；填写 * 接受任意有效 Host" Type="Variable" Display="advanced" Required="true" Mask="false">100.103.237.80,one.speedtest.waning.site,127.0.0.1,localhost</Config>
   <Config Name="ONESYNC_FORWARDED_ALLOW_IPS" Target="ONESYNC_FORWARDED_ALLOW_IPS" Default="127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10" Mode="" Description="信任反向代理转发头的代理地址或网段，逗号分隔；仅填写实际代理来源" Type="Variable" Display="advanced" Required="true" Mask="false">127.0.0.1,::1,172.16.0.0/12,192.168.0.0/16,100.64.0.0/10</Config>
   <Config Name="GRAPH_CLIENT_ID" Target="GRAPH_CLIENT_ID" Default="" Mode="" Description="单租户 Entra 应用 Client ID" Type="Variable" Display="always" Required="true" Mask="false"></Config>
   <Config Name="GRAPH_TENANT_ID" Target="GRAPH_TENANT_ID" Default="5dldn8.onmicrosoft.com" Mode="" Description="Microsoft Entra 租户" Type="Variable" Display="always" Required="true" Mask="false">5dldn8.onmicrosoft.com</Config>

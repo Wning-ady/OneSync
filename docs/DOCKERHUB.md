@@ -6,6 +6,11 @@
 
 OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活跃的 `abraunegg/onedrive`。它提供浏览器管理页、设备代码授权、文件夹范围选择、单次同步、持续同步、受控重同步、中文日志和企业微信通知。
 
+## v0.1.18 组网地址部署修复
+
+- Unraid XML、Compose 与部署示例统一使用当前组网地址 `100.103.237.80`，避免容器只绑定组网地址时反向代理仍指向旧局域网地址
+- 反向代理域名 `one.speedtest.waning.site` 可加入 `ONESYNC_ALLOWED_HOSTS`，并继续通过 `ONESYNC_FORWARDED_ALLOW_IPS` 校验可信代理来源
+
 ## v0.1.17 反向代理来源修复
 
 - 修复反向代理终止 HTTPS 时，管理页写请求被误判为跨来源而无法停止或控制同步的问题
@@ -84,7 +89,7 @@ OneSync 是面向 Unraid 的 OneDrive 双向同步管理容器，基于维护活
 
 ## 快速部署
 
-镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.17`
+镜像：`docker.io/waning/onesync:latest` 或 `docker.io/waning/onesync:0.1.18`
 
 必填配置：
 
